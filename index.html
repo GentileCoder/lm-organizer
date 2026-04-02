@@ -1,0 +1,646 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0"/>
+<meta name="apple-mobile-web-app-capable" content="yes"/>
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
+<title>My Organizer</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
+body{background:#0f0f0f;color:#e8e8e8;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;min-height:100vh;display:flex;flex-direction:column;}
+input,button,select,textarea{font-family:inherit;}
+input{background:#1a1a1a;border:1px solid #2e2e2e;border-radius:8px;padding:10px 12px;color:#e8e8e8;font-size:14px;outline:none;width:100%;}
+input:focus{border-color:#7c6af7;}
+input[type=range]{background:none;border:none;padding:0;accent-color:#7c6af7;}
+input[type=time]{width:90px;}
+input[type=number]{-moz-appearance:textfield;}
+input[type=number]::-webkit-outer-spin-button,input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none;}
+select{background:#1a1a1a;border:1px solid #2e2e2e;border-radius:8px;padding:10px 12px;color:#e8e8e8;font-size:14px;outline:none;width:100%;}
+textarea{background:#1a1a1a;border:1px solid #2e2e2e;border-radius:8px;padding:10px 12px;color:#e8e8e8;font-size:14px;outline:none;width:100%;resize:vertical;line-height:1.5;}
+textarea:focus{border-color:#7c6af7;}
+button{cursor:pointer;border:none;border-radius:8px;font-size:14px;font-weight:500;}
+#header{background:#1a1a1a;border-bottom:1px solid #2e2e2e;padding:13px 16px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:10;}
+#header h1{font-size:16px;font-weight:500;}
+.status-ok{color:#3d9e75;}.status-err{color:#d85a30;}.status-mid{color:#888;}
+.hbtn{font-size:12px;color:#888;background:transparent;border:1px solid #2e2e2e;border-radius:6px;padding:4px 8px;}
+.bar{background:#222;border-bottom:1px solid #2e2e2e;padding:10px 16px;display:none;gap:8px;align-items:center;}
+.bar.open{display:flex;}
+.bar input{flex:1;width:auto;}
+#nav{display:flex;gap:4px;padding:10px 12px;background:#1a1a1a;border-bottom:1px solid #2e2e2e;overflow-x:auto;}
+#nav::-webkit-scrollbar{display:none;}
+.nav-btn{padding:6px 12px;border-radius:20px;background:transparent;color:#888;font-size:13px;white-space:nowrap;border:none;}
+.nav-btn.active{background:#7c6af7;color:#fff;}
+#main{flex:1;padding:16px;overflow-y:auto;max-width:480px;width:100%;margin:0 auto;}
+.add-row{display:flex;gap:8px;margin-bottom:16px;}
+.pbtn{background:#7c6af7;color:#fff;padding:10px 16px;white-space:nowrap;border-radius:8px;border:none;font-size:14px;font-weight:500;cursor:pointer;}
+.sbtn{background:#7c6af7;color:#fff;padding:6px 12px;white-space:nowrap;font-size:13px;border-radius:8px;border:none;font-weight:500;cursor:pointer;}
+.card{background:#222;border:1px solid #2e2e2e;border-radius:12px;padding:14px;margin-bottom:10px;}
+.del-btn{background:transparent;color:#888;font-size:14px;padding:4px;border:none;cursor:pointer;}
+.empty{color:#888;font-size:14px;text-align:center;margin-top:2rem;}
+.cal-nav-btn{background:#1a1a1a;color:#888;border:1px solid #2e2e2e;border-radius:8px;padding:5px 12px;font-size:16px;cursor:pointer;}
+.cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:2px;margin-bottom:4px;}
+.cal-day{border-radius:8px;padding:6px 2px;text-align:center;cursor:pointer;min-height:38px;border:1px solid transparent;}
+.cal-day span{font-size:13px;}
+.cal-day.today{border-color:#7c6af7;}.cal-day.today span{color:#7c6af7;}
+.cal-day.selected{background:#7c6af7;}.cal-day.selected span{color:#fff;}
+.cal-dots{display:flex;justify-content:center;gap:2px;margin-top:2px;}
+.cal-dot{width:4px;height:4px;border-radius:50%;background:#7c6af7;}
+.cal-day.selected .cal-dot{background:#fff;}
+.fin-tabs{display:flex;gap:4px;margin-bottom:16px;overflow-x:auto;}
+.fin-tab{padding:6px 13px;border-radius:20px;border:none;font-size:12px;cursor:pointer;white-space:nowrap;background:#222;color:#888;}
+.fin-tab.active{background:#7c6af7;color:#fff;font-weight:500;}
+.sg2{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:14px;}
+.sg3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:14px;}
+.sc{background:#222;border:1px solid #2e2e2e;border-radius:12px;padding:12px;text-align:center;}
+.sl{font-size:11px;color:#888;margin-bottom:4px;}
+.sv{font-size:15px;font-weight:500;}
+#chat-wrap{background:#1a1a1a;border-top:1px solid #2e2e2e;padding:12px 16px;}
+#chat-inner{max-width:480px;margin:0 auto;}
+#chat-messages{max-height:180px;overflow-y:auto;display:flex;flex-direction:column;margin-bottom:8px;gap:6px;}
+.bubble{padding:9px 13px;border-radius:12px;font-size:14px;line-height:1.5;max-width:85%;}
+.bubble.ai{background:#222;border-radius:12px 12px 12px 4px;align-self:flex-start;}
+.bubble.user{background:#3d3580;border-radius:12px 12px 4px 12px;align-self:flex-end;}
+.bubble.thinking{color:#888;}
+#chat-input-row{display:flex;gap:8px;}
+#chat-input{flex:1;font-size:13px;}
+#send-btn{background:#7c6af7;color:#fff;padding:10px 14px;font-size:16px;border:none;border-radius:8px;}
+#send-btn:disabled{background:#2e2e2e;opacity:0.6;}
+</style>
+</head>
+<body>
+
+<div id="header">
+  <h1>My Organizer</h1>
+  <div style="display:flex;align-items:center;gap:8px;">
+    <span id="sync-status" class="status-err" style="font-size:11px;">Not connected</span>
+    <button class="hbtn" onclick="toggleBar('url-bar')">⚙ URL</button>
+    <button class="hbtn" onclick="toggleBar('key-bar')">🔑 Key</button>
+  </div>
+</div>
+<div id="url-bar" class="bar">
+  <input id="url-field" type="url" placeholder="https://your-function.run.app"/>
+  <button class="sbtn" onclick="connectWorker()">Connect</button>
+</div>
+<div id="key-bar" class="bar">
+  <input id="key-field" type="password" placeholder="Gemini API key (AIza...)"/>
+  <button class="sbtn" onclick="saveKey()">Save</button>
+</div>
+
+<div id="nav">
+  <button class="nav-btn active" onclick="nav('calendar',this)">▦ Calendar</button>
+  <button class="nav-btn" onclick="nav('tasks',this)">✓ Tasks</button>
+  <button class="nav-btn" onclick="nav('notes',this)">≡ Notes</button>
+  <button class="nav-btn" onclick="nav('goals',this)">◎ Goals</button>
+  <button class="nav-btn" onclick="nav('shopping',this)">⊕ Shopping</button>
+  <button class="nav-btn" onclick="nav('finance',this)">€ Finance</button>
+  <button class="nav-btn" onclick="nav('review',this)">★ Review</button>
+</div>
+
+<div id="main"></div>
+
+<div id="chat-wrap">
+  <div id="chat-inner">
+    <div id="chat-messages">
+      <div class="bubble ai">Hi Alejandro! Use ⚙ URL to sync with Google Cloud, and 🔑 Key for Gemini AI.</div>
+    </div>
+    <div id="chat-input-row">
+      <input id="chat-input" type="text" placeholder='Ask AI — "What should I focus on today?"' onkeydown="if(event.key==='Enter')sendMsg()"/>
+      <button id="send-btn" onclick="sendMsg()">↑</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const WKEY="organizer_worker_url", GKEY="gemini_api_key";
+const MONTHS_S=["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+const MONTHS_L=["January","February","March","April","May","June","July","August","September","October","November","December"];
+const DAYS=["Sun","Mon","Tue","Wed","Thu","Fri","Sat"];
+const ECATS=["Housing","Food","Transport","Health","Entertainment","Shopping","Utilities","Other"];
+const fmt=n=>"€"+Number(n).toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g,",");
+const esc=s=>String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
+
+const now=new Date();
+const todayStr=`${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,"0")}-${String(now.getDate()).padStart(2,"0")}`;
+
+let workerUrl=localStorage.getItem(WKEY)||"";
+let section="calendar";
+let calSel=null, calView={y:now.getFullYear(),m:now.getMonth()}, calMode="month";
+let calWeekStart=new Date(now); calWeekStart.setDate(now.getDate()-now.getDay());
+let calDayDate=new Date(now);
+let finTab="overview", finM=now.getMonth(), finY=now.getFullYear();
+let aiLoading=false, chatHist=[];
+
+let D={
+  tasks:[{id:1,text:"Review patent pipeline config",done:false}],
+  notes:[{id:1,text:"El Toro: check BONit invoice export",done:false}],
+  goals:[{id:1,text:"Ship confidentiality system v2",progress:60}],
+  shopping:[{id:1,text:"Descaler for glasswasher",done:false}],
+  events:[],
+  finance:{salary:0,transactions:[],budgets:{}},
+  review:[]
+};
+
+function safeD(){
+  if(!D.finance)D.finance={salary:0,transactions:[],budgets:{}};
+  if(!D.finance.transactions)D.finance.transactions=[];
+  if(!D.finance.budgets)D.finance.budgets={};
+  if(!D.review)D.review=[];
+  if(!D.events)D.events=[];
+  if(!D.tasks)D.tasks=[];
+  if(!D.notes)D.notes=[];
+  if(!D.goals)D.goals=[];
+  if(!D.shopping)D.shopping=[];
+}
+
+// Init
+if(workerUrl){document.getElementById("url-field").value=workerUrl;loadRemote();}
+const sk=localStorage.getItem(GKEY)||"";
+if(sk)document.getElementById("key-field").value=sk;
+render();
+
+// Sync
+function setSS(msg){const el=document.getElementById("sync-status");el.textContent=msg;el.className=msg.includes("✓")?"status-ok":msg.includes("rror")||msg.includes("fail")||msg.includes("Not")?"status-err":"status-mid";}
+async function loadRemote(){
+  if(!workerUrl)return;setSS("Loading…");
+  try{
+    const r=await fetch(workerUrl);if(!r.ok)throw new Error("HTTP "+r.status);
+    const d=await r.json();
+    if(d&&Object.keys(d).length>0)D=d;
+    safeD();setSS("Synced ✓");render();addBubble("ai","Connected! Data loaded.");
+  }catch(e){setSS("Error: "+e.message);}
+}
+async function saveRemote(){
+  if(!workerUrl){setSS("Not connected");return;}setSS("Saving…");
+  try{await fetch(workerUrl,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(D)});setSS("Saved ✓");}
+  catch(e){setSS("Save failed");}
+}
+function toggleBar(id){document.getElementById(id).classList.toggle("open");}
+async function connectWorker(){
+  const u=document.getElementById("url-field").value.trim();if(!u)return;
+  workerUrl=u;localStorage.setItem(WKEY,u);
+  document.getElementById("url-bar").classList.remove("open");
+  await loadRemote();
+}
+function saveKey(){
+  const k=document.getElementById("key-field").value.trim();if(!k)return;
+  localStorage.setItem(GKEY,k);document.getElementById("key-bar").classList.remove("open");
+  addBubble("ai","Gemini key saved! I'm ready.");
+}
+
+// Nav
+function nav(sec,btn){section=sec;document.querySelectorAll(".nav-btn").forEach(b=>b.classList.remove("active"));btn.classList.add("active");render();}
+
+// Render
+function render(){
+  const main=document.getElementById("main");
+  if(section==="calendar"){renderCal(main);return;}
+  if(section==="finance"){renderFin(main);return;}
+  if(section==="review"){renderReview(main);return;}
+  const items=D[section]||[];
+  const label={tasks:"Tasks",notes:"Notes",goals:"Goals",shopping:"Shopping"}[section];
+  let h=`<div class="add-row"><input id="ni" type="text" placeholder="Add to ${label}…" onkeydown="if(event.key==='Enter')addItem()"/><button class="pbtn" onclick="addItem()">Add</button></div>`;
+  if(!items.length){h+=`<p class="empty">Nothing here yet.</p>`;}
+  else if(section==="goals"){
+    items.forEach((item,i)=>{
+      h+=`<div class="card">
+        <div style="display:flex;justify-content:space-between;margin-bottom:8px;font-size:14px"><span style="font-weight:500">${esc(item.text)}</span><span style="color:#888;font-size:12px">${item.progress}%</span></div>
+        <div style="background:#2e2e2e;border-radius:4px;height:6px;margin-bottom:10px"><div style="background:#7c6af7;height:6px;border-radius:4px;width:${item.progress}%"></div></div>
+        <div style="display:flex;gap:8px;align-items:center"><input type="range" min="0" max="100" value="${item.progress}" style="flex:1;accent-color:#7c6af7;border:none;background:none;padding:0" oninput="updGoal(${i},this.value)"/><button class="del-btn" onclick="delItem(${i})">✕</button></div>
+      </div>`;
+    });
+  }else{
+    items.forEach((item,i)=>{
+      h+=`<div class="card"><div style="display:flex;align-items:center;gap:10px">
+        <div onclick="toggleDone(${i})" style="width:18px;height:18px;border-radius:50%;border:2px solid ${item.done?"#3d9e75":"#2e2e2e"};background:${item.done?"#3d9e75":"transparent"};cursor:pointer;flex-shrink:0"></div>
+        <span style="flex:1;font-size:14px;${item.done?"text-decoration:line-through;color:#888":""}">${esc(item.text)}</span>
+        <button class="del-btn" onclick="delItem(${i})">✕</button>
+      </div></div>`;
+    });
+  }
+  main.innerHTML=h;
+}
+function addItem(){
+  const el=document.getElementById("ni");const t=el.value.trim();if(!t)return;
+  const item={id:Date.now(),text:t,done:false};
+  if(section==="goals")item.progress=0;
+  D[section].push(item);el.value="";saveRemote();render();
+}
+function toggleDone(i){const item=D[section][i];item.done=!item.done;saveRemote();render();}
+function delItem(i){D[section].splice(i,1);saveRemote();render();}
+function updGoal(i,v){D.goals[i].progress=parseInt(v);saveRemote();}
+
+// Calendar
+function renderCal(main){
+  const viewTabs=`<div style="display:flex;gap:4px;margin-bottom:14px">
+    ${["month","week","day"].map(v=>`<button onclick="calMode='${v}';render()" style="padding:5px 14px;border-radius:20px;border:none;font-size:12px;cursor:pointer;background:${calMode===v?"#7c6af7":"#222"};color:${calMode===v?"#fff":"#888"};font-weight:${calMode===v?"500":"400"}">${v.charAt(0).toUpperCase()+v.slice(1)}</button>`).join("")}
+  </div>`;
+  if(calMode==="month") main.innerHTML=viewTabs+renderCalMonth();
+  else if(calMode==="week") main.innerHTML=viewTabs+renderCalWeek();
+  else main.innerHTML=viewTabs+renderCalDay();
+}
+
+function dStr(d){return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`;}
+function fmtTime(t){if(!t)return "";const[h,m]=t.split(":");const ap=+h>=12?"pm":"am";return `${+h%12||12}:${m}${ap}`;}
+
+function renderCalMonth(){
+  const {y,m}=calView;
+  const dim=new Date(y,m+1,0).getDate(),fd=new Date(y,m,1).getDay();
+  const dl=DAYS.map(d=>`<div style="text-align:center;font-size:11px;color:#888;padding:4px 0">${d}</div>`).join("");
+  const bl=Array(fd).fill("<div></div>").join("");
+  let ds="";
+  for(let d=1;d<=dim;d++){
+    const ds2=`${y}-${String(m+1).padStart(2,"0")}-${String(d).padStart(2,"0")}`;
+    const evts=D.events.filter(e=>e.date===ds2);
+    const isT=ds2===todayStr,isS=ds2===calSel;
+    const cls=`cal-day${isT?" today":""}${isS?" selected":""}`;
+    const dots=evts.length?`<div class="cal-dots">${evts.slice(0,3).map(()=>'<div class="cal-dot"></div>').join("")}</div>`:"";
+    ds+=`<div class="${cls}" onclick="selDay('${ds2}')"><span>${d}</span>${dots}</div>`;
+  }
+  let evH="";
+  if(calSel){
+    const se=D.events.filter(e=>e.date===calSel);
+    const er=se.length?se.map(e=>`<div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
+      ${e.time?`<span style="font-size:12px;color:#7c6af7;min-width:40px">${fmtTime(e.time)}</span>`:""}
+      <span style="flex:1;font-size:14px">${esc(e.title)}</span>
+      <button class="del-btn" onclick="delEvt(${D.events.indexOf(e)})">✕</button>
+    </div>`).join(""):`<p style="font-size:13px;color:#888;margin-bottom:10px">No events</p>`;
+    evH=`<div class="card" style="margin-top:4px">
+      <p style="font-size:13px;color:#888;margin-bottom:10px">${calSel}</p>${er}
+      <div style="display:flex;gap:6px;margin-top:8px">
+        <input id="et" type="text" placeholder="Event title" style="flex:1" onkeydown="if(event.key==='Enter')addEvt()"/>
+        <input id="etm" type="time" style="width:90px"/>
+        <button class="sbtn" onclick="addEvt()">+</button>
+      </div></div>`;
+  }
+  return `<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
+    <button class="cal-nav-btn" onclick="calMv(-1)">‹</button>
+    <span style="font-size:15px;font-weight:500">${MONTHS_L[m]} ${y}</span>
+    <button class="cal-nav-btn" onclick="calMv(1)">›</button></div>
+    <div class="cal-grid">${dl}</div>
+    <div class="cal-grid">${bl}${ds}</div>${evH}`;
+}
+
+function renderCalWeek(){
+  const days=[];
+  for(let i=0;i<7;i++){const d=new Date(calWeekStart);d.setDate(d.getDate()+i);days.push(d);}
+  const startLabel=`${MONTHS_S[days[0].getMonth()]} ${days[0].getDate()}`;
+  const endLabel=`${MONTHS_S[days[6].getMonth()]} ${days[6].getDate()}, ${days[6].getFullYear()}`;
+  const cols=days.map(d=>{
+    const ds=dStr(d);
+    const evts=D.events.filter(e=>e.date===ds).sort((a,b)=>(a.time||"").localeCompare(b.time||""));
+    const isT=ds===todayStr;
+    const evRows=evts.map(e=>`<div onclick="selDay('${ds}')" style="background:#3d3580;border-radius:6px;padding:4px 6px;margin-bottom:3px;cursor:pointer">
+      ${e.time?`<div style="font-size:10px;color:#a094f7">${fmtTime(e.time)}</div>`:""}
+      <div style="font-size:11px;color:#e8e8e8;line-height:1.3">${esc(e.title)}</div>
+    </div>`).join("");
+    return `<div style="flex:1;min-width:0;border-right:1px solid #2e2e2e;padding:0 4px">
+      <div style="text-align:center;padding:6px 0;border-bottom:1px solid #2e2e2e;margin-bottom:6px">
+        <div style="font-size:10px;color:#888">${DAYS[d.getDay()].slice(0,2)}</div>
+        <div style="font-size:14px;font-weight:500;${isT?"color:#7c6af7":""}">${d.getDate()}</div>
+      </div>
+      ${evRows||""}
+      <div onclick="selDay('${ds}')" style="text-align:center;margin-top:4px;cursor:pointer;color:#2e2e2e;font-size:18px">+</div>
+    </div>`;
+  }).join("");
+
+  let evH="";
+  if(calSel){
+    const se=D.events.filter(e=>e.date===calSel);
+    const er=se.length?se.map(e=>`<div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
+      ${e.time?`<span style="font-size:12px;color:#7c6af7;min-width:40px">${fmtTime(e.time)}</span>`:""}
+      <span style="flex:1;font-size:14px">${esc(e.title)}</span>
+      <button class="del-btn" onclick="delEvt(${D.events.indexOf(e)})">✕</button>
+    </div>`).join(""):`<p style="font-size:13px;color:#888;margin-bottom:10px">No events</p>`;
+    evH=`<div class="card" style="margin-top:12px">
+      <p style="font-size:13px;color:#888;margin-bottom:10px">${calSel}</p>${er}
+      <div style="display:flex;gap:6px;margin-top:8px">
+        <input id="et" type="text" placeholder="Event title" style="flex:1" onkeydown="if(event.key==='Enter')addEvt()"/>
+        <input id="etm" type="time" style="width:90px"/>
+        <button class="sbtn" onclick="addEvt()">+</button>
+      </div></div>`;
+  }
+
+  return `<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
+    <button class="cal-nav-btn" onclick="calMv(-1)">‹</button>
+    <span style="font-size:14px;font-weight:500">${startLabel} – ${endLabel}</span>
+    <button class="cal-nav-btn" onclick="calMv(1)">›</button></div>
+    <div style="display:flex;background:#222;border:1px solid #2e2e2e;border-radius:12px;overflow:hidden;min-height:160px">${cols}</div>${evH}`;
+}
+
+function renderCalDay(){
+  const ds=dStr(calDayDate);
+  const evts=D.events.filter(e=>e.date===ds).sort((a,b)=>(a.time||"").localeCompare(b.time||""));
+  const isT=ds===todayStr;
+  const evRows=evts.length?evts.map(e=>`<div style="display:flex;align-items:center;gap:10px;padding:10px 12px;background:#2a2a40;border-radius:8px;margin-bottom:8px">
+    <div style="flex:1">
+      <div style="font-size:14px">${esc(e.title)}</div>
+      ${e.time?`<div style="font-size:12px;color:#a094f7;margin-top:2px">${fmtTime(e.time)}</div>`:""}
+    </div>
+    <button class="del-btn" onclick="delEvt(${D.events.indexOf(e)})">✕</button>
+  </div>`).join(""):`<p style="color:#888;font-size:13px;text-align:center;margin:2rem 0">No events today</p>`;
+
+  return `<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">
+    <button class="cal-nav-btn" onclick="calMv(-1)">‹</button>
+    <div style="text-align:center">
+      <div style="font-size:18px;font-weight:500;${isT?"color:#7c6af7":""}">${calDayDate.getDate()}</div>
+      <div style="font-size:12px;color:#888">${DAYS[calDayDate.getDay()]}, ${MONTHS_L[calDayDate.getMonth()]} ${calDayDate.getFullYear()}</div>
+    </div>
+    <button class="cal-nav-btn" onclick="calMv(1)">›</button></div>
+    <div>${evRows}</div>
+    <div class="card" style="margin-top:12px">
+      <div style="font-size:13px;font-weight:500;margin-bottom:10px">Add event</div>
+      <div style="display:flex;gap:6px">
+        <input id="et" type="text" placeholder="Event title" style="flex:1" onkeydown="if(event.key==='Enter')addEvt()"/>
+        <input id="etm" type="time" style="width:90px"/>
+        <button class="sbtn" onclick="addEvt()">+</button>
+      </div></div>`;
+}
+
+function calMv(d){
+  if(calMode==="month"){calView.m+=d;if(calView.m>11){calView.m=0;calView.y++;}if(calView.m<0){calView.m=11;calView.y--;}}
+  else if(calMode==="week"){calWeekStart.setDate(calWeekStart.getDate()+d*7);}
+  else{calDayDate.setDate(calDayDate.getDate()+d);}
+  render();
+}
+function selDay(d){
+  calSel=calSel===d?null:d;
+  if(calMode!=="month"){calSel=d;}
+  render();
+}
+function addEvt(){
+  const t=document.getElementById("et")?.value.trim();
+  const tm=document.getElementById("etm")?.value;
+  const date=calSel||(calMode==="day"?dStr(calDayDate):null);
+  if(!t||!date)return;
+  D.events.push({id:Date.now(),date,time:tm||"",title:t});
+  D.events.sort((a,b)=>a.date.localeCompare(b.date));
+  saveRemote();render();
+}
+function delEvt(i){D.events.splice(i,1);saveRemote();render();}
+
+// Finance
+function getRecM(y,m){
+  return D.finance.transactions.filter(t=>{
+    if(t.type!=="expense")return false;
+    if(t.recurring==="monthly")return true;
+    if(t.recurring==="bimonthly"){const td=new Date(t.date);const diff=(y*12+m)-(td.getFullYear()*12+td.getMonth());return diff>=0&&diff%2===0;}
+    return false;
+  });
+}
+function getOncM(y,m){
+  const ms=`${y}-${String(m+1).padStart(2,"0")}`;
+  return D.finance.transactions.filter(t=>(t.recurring==="none"||!t.recurring)&&t.date.startsWith(ms));
+}
+function mSumm(y,m){
+  const o=getOncM(y,m),r=getRecM(y,m);
+  const inc=(D.finance.salary||0)+o.filter(t=>t.type==="income").reduce((s,t)=>s+t.amount,0);
+  const exp=o.filter(t=>t.type==="expense").reduce((s,t)=>s+t.amount,0)+r.reduce((s,t)=>s+t.amount,0);
+  return{inc,exp,bal:inc-exp};
+}
+
+function renderFin(main){
+  const tabs=["overview","month","expenses","recurring","budget"];
+  const tl={overview:"Overview",month:"Month",expenses:"Expenses",recurring:"Recurring",budget:"Budget"};
+  let th=`<div class="fin-tabs">${tabs.map(t=>`<button class="fin-tab${finTab===t?" active":""}" onclick="finTab='${t}';render()">${tl[t]}</button>`).join("")}</div>`;
+  let c="";
+  if(finTab==="overview")c=finOverview();
+  else if(finTab==="month")c=finMonth();
+  else if(finTab==="expenses")c=finExpenses();
+  else if(finTab==="recurring")c=finRecurring();
+  else if(finTab==="budget")c=finBudget();
+  main.innerHTML=th+c;
+}
+
+function finOverview(){
+  const ms=[];
+  for(let i=11;i>=0;i--){let m=now.getMonth()-i,y=now.getFullYear();if(m<0){m+=12;y--;}ms.push({y,m,label:MONTHS_S[m],s:mSumm(y,m)});}
+  const cs=mSumm(now.getFullYear(),now.getMonth());
+  const ti=ms.reduce((s,x)=>s+x.s.inc,0),te=ms.reduce((s,x)=>s+x.s.exp,0);
+  const mx=Math.max(...ms.map(x=>Math.max(x.s.inc,x.s.exp)),1);
+  const bars=ms.map(x=>{
+    const ih=Math.max(Math.round((x.s.inc/mx)*80),2),eh=Math.max(Math.round((x.s.exp/mx)*80),2);
+    return `<div style="display:flex;flex-direction:column;align-items:center;gap:2px;flex:1">
+      <div style="display:flex;gap:1px;align-items:flex-end;height:80px">
+        <div style="width:8px;height:${ih}px;background:#3d9e75;border-radius:2px 2px 0 0"></div>
+        <div style="width:8px;height:${eh}px;background:#d85a30;border-radius:2px 2px 0 0"></div>
+      </div><span style="font-size:9px;color:#888">${x.label}</span></div>`;
+  }).join("");
+  return `<div class="sg3"><div class="sc"><div class="sl">Income</div><div class="sv" style="color:#3d9e75">${fmt(cs.inc)}</div></div>
+    <div class="sc"><div class="sl">Expenses</div><div class="sv" style="color:#d85a30">${fmt(cs.exp)}</div></div>
+    <div class="sc"><div class="sl">Balance</div><div class="sv" style="color:${cs.bal>=0?"#3d9e75":"#d85a30"}">${fmt(cs.bal)}</div></div></div>
+    <div class="card"><div style="font-size:13px;font-weight:500;margin-bottom:12px">12-month chart</div>
+    <div style="display:flex;gap:2px;align-items:flex-end">${bars}</div>
+    <div style="display:flex;gap:12px;margin-top:8px;font-size:11px;color:#888">
+      <span><span style="display:inline-block;width:8px;height:8px;background:#3d9e75;border-radius:2px;margin-right:4px"></span>Income</span>
+      <span><span style="display:inline-block;width:8px;height:8px;background:#d85a30;border-radius:2px;margin-right:4px"></span>Expenses</span>
+    </div></div>
+    <div class="card" style="margin-top:10px">
+      <div style="font-size:13px;font-weight:500;margin-bottom:10px">12-month totals</div>
+      <div style="display:flex;justify-content:space-between;font-size:13px;padding:6px 0;border-bottom:1px solid #2e2e2e"><span style="color:#888">Total income</span><span style="color:#3d9e75">${fmt(ti)}</span></div>
+      <div style="display:flex;justify-content:space-between;font-size:13px;padding:6px 0;border-bottom:1px solid #2e2e2e"><span style="color:#888">Total expenses</span><span style="color:#d85a30">${fmt(te)}</span></div>
+      <div style="display:flex;justify-content:space-between;font-size:13px;padding:6px 0"><span style="color:#888">Net savings</span><span style="color:${ti-te>=0?"#3d9e75":"#d85a30"}">${fmt(ti-te)}</span></div>
+    </div>`;
+}
+
+function finMonth(){
+  const s=mSumm(finY,finM);
+  const o=getOncM(finY,finM),r=getRecM(finY,finM);
+  const all=[...o,...r.map(t=>({...t,_r:true}))].sort((a,b)=>b.date.localeCompare(a.date));
+  const ct={};all.filter(t=>t.type==="expense").forEach(t=>{ct[t.category]=(ct[t.category]||0)+t.amount;});
+  const cr=Object.entries(ct).sort((a,b)=>b[1]-a[1]).map(([c,a])=>{
+    const p=s.exp>0?Math.round((a/s.exp)*100):0;
+    return `<div style="margin-bottom:8px"><div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:3px"><span style="color:#888">${c}</span><span>${fmt(a)}</span></div>
+    <div style="background:#2e2e2e;border-radius:4px;height:4px"><div style="background:#d85a30;height:4px;border-radius:4px;width:${p}%"></div></div></div>`;
+  }).join("");
+  const tr=all.slice(0,20).map(t=>`<div style="display:flex;align-items:center;padding:8px 0;border-bottom:1px solid #2e2e2e;gap:8px">
+    <div style="flex:1"><div style="font-size:13px">${esc(t.description)}${t._r?` <span style="font-size:10px;color:#7c6af7;background:#3d3580;padding:1px 5px;border-radius:4px">↻</span>`:""}</div>
+    <div style="font-size:11px;color:#888">${t.category}·${t.date}</div></div>
+    <span style="font-size:14px;font-weight:500;color:${t.type==="income"?"#3d9e75":"#d85a30"}">${t.type==="income"?"+":"−"}${fmt(t.amount)}</span>
+  </div>`).join("");
+  return `<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
+    <button class="cal-nav-btn" onclick="finNav(-1)">‹</button>
+    <span style="font-weight:500;font-size:15px">${MONTHS_L[finM]} ${finY}</span>
+    <button class="cal-nav-btn" onclick="finNav(1)">›</button></div>
+    <div class="sg3" style="margin-bottom:14px">
+      <div class="sc"><div class="sl">Income</div><div class="sv" style="color:#3d9e75;font-size:13px">${fmt(s.inc)}</div></div>
+      <div class="sc"><div class="sl">Expenses</div><div class="sv" style="color:#d85a30;font-size:13px">${fmt(s.exp)}</div></div>
+      <div class="sc"><div class="sl">Balance</div><div class="sv" style="color:${s.bal>=0?"#3d9e75":"#d85a30"};font-size:13px">${fmt(s.bal)}</div></div></div>
+    ${cr?`<div class="card" style="margin-bottom:14px"><div style="font-size:13px;font-weight:500;margin-bottom:10px">By category</div>${cr}</div>`:""}
+    <div class="card"><div style="font-size:13px;font-weight:500;margin-bottom:8px">Transactions</div>${tr||"<p style='font-size:13px;color:#888'>No transactions this month.</p>"}</div>`;
+}
+function finNav(d){finM+=d;if(finM>11){finM=0;finY++;}if(finM<0){finM=11;finY--;}render();}
+
+function finExpenses(){
+  const rows=[...D.finance.transactions].reverse().slice(0,25).map(t=>`
+    <div style="display:flex;align-items:center;padding:8px 0;border-bottom:1px solid #2e2e2e;gap:8px">
+      <div style="flex:1"><div style="font-size:13px">${esc(t.description)}${t.recurring&&t.recurring!=="none"?` <span style="font-size:10px;color:#7c6af7;background:#3d3580;padding:1px 5px;border-radius:4px">↻${t.recurring==="bimonthly"?" 2mo":""}</span>`:""}</div>
+      <div style="font-size:11px;color:#888">${t.category}·${t.date}</div></div>
+      <span style="font-size:14px;font-weight:500;color:${t.type==="income"?"#3d9e75":"#d85a30"}">${t.type==="income"?"+":"−"}${fmt(t.amount)}</span>
+      <button class="del-btn" onclick="delTx('${t.id}')">✕</button>
+    </div>`).join("");
+  return `<div class="card" style="margin-bottom:14px">
+    <div style="font-size:13px;font-weight:500;margin-bottom:12px">Add transaction</div>
+    <div style="display:flex;gap:8px;margin-bottom:8px">
+      <select id="tt" style="flex:1;width:auto"><option value="expense">Expense</option><option value="income">Income</option></select>
+      <input id="ta" type="number" min="0" step="0.01" placeholder="Amount €" style="flex:1;width:auto;font-size:13px"/>
+    </div>
+    <input id="td" type="text" placeholder="Description" style="margin-bottom:8px;font-size:13px"/>
+    <div style="display:flex;gap:8px;margin-bottom:8px">
+      <select id="tc" style="flex:1;width:auto">${ECATS.map(c=>`<option>${c}</option>`).join("")}</select>
+      <input id="tdt" type="date" value="${todayStr}" style="flex:1;width:auto;font-size:13px"/>
+    </div>
+    <select id="tr" style="margin-bottom:10px">
+      <option value="none">One-time</option>
+      <option value="monthly">Recurring monthly</option>
+      <option value="bimonthly">Recurring every 2 months</option>
+    </select>
+    <button onclick="addTx()" style="width:100%;background:#7c6af7;color:#fff;padding:10px;border-radius:8px;font-size:14px;font-weight:500;cursor:pointer;border:none">Add</button>
+  </div>
+  <div class="card"><div style="font-size:13px;font-weight:500;margin-bottom:8px">All transactions</div>${rows||"<p style='font-size:13px;color:#888'>No transactions yet.</p>"}</div>`;
+}
+function addTx(){
+  const type=document.getElementById("tt").value;
+  const amt=parseFloat(document.getElementById("ta").value);
+  const desc=document.getElementById("td").value.trim();
+  const cat=document.getElementById("tc").value;
+  const date=document.getElementById("tdt").value;
+  const rec=document.getElementById("tr").value;
+  if(!amt||!desc||!date)return;
+  D.finance.transactions.push({id:"tx"+Date.now(),type,amount:amt,description:desc,category:cat,date,recurring:rec});
+  D.finance.transactions.sort((a,b)=>b.date.localeCompare(a.date));
+  saveRemote();render();
+}
+function delTx(id){D.finance.transactions=D.finance.transactions.filter(t=>t.id!==id);saveRemote();render();}
+
+function finRecurring(){
+  const rec=D.finance.transactions.filter(t=>t.recurring&&t.recurring!=="none");
+  const mt=rec.filter(t=>t.recurring==="monthly").reduce((s,t)=>s+t.amount,0);
+  const bt=rec.filter(t=>t.recurring==="bimonthly").reduce((s,t)=>s+t.amount,0);
+  const rows=rec.map(t=>`<div style="display:flex;align-items:center;padding:10px 0;border-bottom:1px solid #2e2e2e;gap:8px">
+    <div style="flex:1"><div style="font-size:13px">${esc(t.description)}</div>
+    <div style="font-size:11px;color:#888">${t.category}·<span style="color:#7c6af7">${t.recurring==="monthly"?"Every month":"Every 2 months"}</span></div></div>
+    <span style="font-size:14px;font-weight:500;color:#d85a30">−${fmt(t.amount)}</span>
+    <button class="del-btn" onclick="delTx('${t.id}')">✕</button>
+  </div>`).join("");
+  return `<div class="sg2"><div class="sc"><div class="sl">Monthly fixed</div><div class="sv" style="color:#d85a30">${fmt(mt)}</div></div>
+    <div class="sc"><div class="sl">Avg/month (all)</div><div class="sv" style="color:#d85a30">${fmt(mt+bt/2)}</div></div></div>
+    <div class="card">${rows||"<p style='font-size:13px;color:#888'>No recurring expenses yet.</p>"}</div>`;
+}
+
+function finBudget(){
+  const s=mSumm(now.getFullYear(),now.getMonth());
+  const sal=D.finance.salary||0,bud=D.finance.budgets||{};
+  const o=getOncM(now.getFullYear(),now.getMonth()),r=getRecM(now.getFullYear(),now.getMonth());
+  const ca={};[...o.filter(t=>t.type==="expense"),...r].forEach(t=>{ca[t.category]=(ca[t.category]||0)+t.amount;});
+  const br=ECATS.map(c=>{
+    const act=ca[c]||0,bdg=bud[c]||0,p=bdg>0?Math.min(Math.round((act/bdg)*100),100):0,ov=bdg>0&&act>bdg;
+    return `<div style="margin-bottom:12px">
+      <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:4px"><span>${c}</span>
+      <div style="display:flex;align-items:center;gap:6px">
+        <span style="color:#888">€<input type="number" min="0" value="${bdg}" onchange="setBudget('${c}',this.value)" style="width:55px;background:transparent;border:none;border-bottom:1px solid #2e2e2e;color:#e8e8e8;font-size:12px;text-align:right;outline:none;padding:2px"/></span>
+        <span style="color:${ov?"#d85a30":act>0?"#e8e8e8":"#888"}">${fmt(act)}</span>
+      </div></div>
+      <div style="background:#2e2e2e;border-radius:4px;height:5px"><div style="background:${ov?"#d85a30":"#7c6af7"};height:5px;border-radius:4px;width:${p}%"></div></div>
+    </div>`;
+  }).join("");
+  return `<div class="card" style="margin-bottom:14px">
+    <div style="font-size:13px;font-weight:500;margin-bottom:10px">Monthly salary</div>
+    <div style="display:flex;gap:8px;align-items:center">
+      <input type="number" id="sal" value="${sal}" placeholder="0.00" style="flex:1;font-size:14px"/>
+      <button onclick="setSal()" class="sbtn">Save</button>
+    </div></div>
+    <div class="card"><div style="font-size:13px;font-weight:500;margin-bottom:12px">Budget vs actual — ${MONTHS_S[now.getMonth()]}</div>
+    ${br}
+    <div style="border-top:1px solid #2e2e2e;padding-top:10px;margin-top:4px;display:flex;justify-content:space-between;font-size:13px">
+      <span style="color:#888">Remaining</span>
+      <span style="color:${sal-s.exp>=0?"#3d9e75":"#d85a30"}">${fmt(sal-s.exp)}</span>
+    </div></div>`;
+}
+function setSal(){const v=parseFloat(document.getElementById("sal").value)||0;D.finance.salary=v;saveRemote();render();}
+function setBudget(c,v){if(!D.finance.budgets)D.finance.budgets={};D.finance.budgets[c]=parseFloat(v)||0;saveRemote();}
+
+// Review
+function renderReview(main){
+  if(!D.review)D.review=[];
+  const rows=D.review.map((item,i)=>`<div class="card">
+    <div style="display:flex;align-items:flex-start;gap:10px">
+      <div style="flex:1"><div style="font-size:13px;line-height:1.5">${esc(item.text)}</div>
+      <div style="font-size:11px;color:#888;margin-top:4px">${item.date}</div></div>
+      <button class="del-btn" onclick="delReview(${i})">✕</button>
+    </div></div>`).join("");
+  const copy=D.review.length?`<button onclick="copyReviews()" style="width:100%;background:#222;border:1px solid #2e2e2e;color:#888;padding:10px;border-radius:8px;font-size:13px;cursor:pointer;margin-bottom:14px">Copy all ideas to clipboard ↗</button>`:"";
+  main.innerHTML=`<div class="card" style="margin-bottom:14px">
+    <div style="font-size:13px;font-weight:500;margin-bottom:10px">New idea or improvement</div>
+    <textarea id="ri" placeholder="Describe an idea, bug, or feature you'd like added…" style="min-height:80px;margin-bottom:8px"></textarea>
+    <button onclick="addReview()" style="width:100%;background:#7c6af7;color:#fff;padding:10px;border-radius:8px;font-size:14px;font-weight:500;cursor:pointer;border:none">Save idea</button>
+  </div>${copy}${rows||"<p class='empty'>No ideas yet.</p>"}`;
+}
+function addReview(){
+  const ta=document.getElementById("ri");const t=ta.value.trim();if(!t)return;
+  if(!D.review)D.review=[];
+  D.review.unshift({id:Date.now(),text:t,date:todayStr});
+  ta.value="";saveRemote();render();
+}
+function delReview(i){D.review.splice(i,1);saveRemote();render();}
+function copyReviews(){
+  const txt=D.review.map((r,i)=>`${i+1}. [${r.date}] ${r.text}`).join("\n\n");
+  navigator.clipboard.writeText(txt).then(()=>addBubble("ai","All ideas copied! Paste them in a new chat.")).catch(()=>addBubble("ai","Copy failed — try manually."));
+}
+
+// AI Chat
+function addBubble(role,text){
+  const wrap=document.getElementById("chat-messages");
+  const d=document.createElement("div");d.className="bubble "+role;d.textContent=text;
+  wrap.appendChild(d);wrap.scrollTop=wrap.scrollHeight;
+}
+function buildCtx(){
+  const cs=mSumm(now.getFullYear(),now.getMonth());
+  return `You are a smart personal organizer and finance assistant. Today is ${todayStr}.
+TASKS: ${D.tasks.map(t=>`[${t.done?"done":"pending"}] ${t.text}`).join("; ")||"none"}
+NOTES: ${D.notes.map(n=>n.text).join("; ")||"none"}
+GOALS: ${D.goals.map(g=>`${g.text} (${g.progress}%)`).join("; ")||"none"}
+SHOPPING: ${D.shopping.map(s=>`[${s.done?"bought":"needed"}] ${s.text}`).join("; ")||"none"}
+FINANCE: salary=${fmt(D.finance.salary||0)}, this month income=${fmt(cs.inc)}, expenses=${fmt(cs.exp)}, balance=${fmt(cs.bal)}
+Actions (end of response): ACTION_ADD:{section}:{text}, ACTION_EVENT:{YYYY-MM-DD}:{HH:MM}:{title}, ACTION_DONE:{section}:{fragment}. Be concise.`;
+}
+function parseActs(text){
+  const lines=text.split("\n"),clean=[];
+  lines.forEach(l=>{
+    const a=l.match(/^ACTION_ADD:(\w+):(.+)$/);
+    const dn=l.match(/^ACTION_DONE:(\w+):(.+)$/);
+    const ev=l.match(/^ACTION_EVENT:([^:]+):([^:]*):(.+)$/);
+    if(a&&D[a[1]]){D[a[1]].push({id:Date.now(),text:a[2].trim(),done:false});}
+    else if(dn&&D[dn[1]]){D[dn[1]]=D[dn[1]].map(i=>i.text.toLowerCase().includes(dn[2].toLowerCase())?{...i,done:true}:i);}
+    else if(ev){D.events.push({id:Date.now(),date:ev[1].trim(),time:ev[2].trim(),title:ev[3].trim()});D.events.sort((a,b)=>a.date.localeCompare(b.date));}
+    else clean.push(l);
+  });
+  return clean.join("\n").trim();
+}
+async function sendMsg(){
+  const inp=document.getElementById("chat-input");
+  const msg=inp.value.trim();if(!msg||aiLoading)return;
+  inp.value="";addBubble("user",msg);chatHist.push({role:"user",content:msg});
+  aiLoading=true;document.getElementById("send-btn").disabled=true;
+  const th=document.createElement("div");th.className="bubble ai thinking";th.textContent="Thinking…";
+  document.getElementById("chat-messages").appendChild(th);
+  document.getElementById("chat-messages").scrollTop=9999;
+  try{
+    const k=localStorage.getItem(GKEY)||"";
+    if(!k){th.remove();addBubble("ai","Please set your Gemini API key using the 🔑 Key button.");aiLoading=false;document.getElementById("send-btn").disabled=false;return;}
+    const res=await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash-preview:generateContent?key=${k}`,{
+      method:"POST",headers:{"Content-Type":"application/json"},
+      body:JSON.stringify({contents:[{role:"user",parts:[{text:buildCtx()+"\n\nRespond to: "+msg}]}]})
+    });
+    const json=await res.json();
+    if(json.error){th.remove();addBubble("ai","Gemini error: "+json.error.message);aiLoading=false;document.getElementById("send-btn").disabled=false;return;}
+    const raw=json.candidates?.[0]?.content?.parts?.[0]?.text||"Sorry, couldn't respond.";
+    const clean=parseActs(raw);
+    th.remove();addBubble("ai",clean);chatHist.push({role:"assistant",content:raw});
+    saveRemote();render();
+  }catch(e){th.remove();addBubble("ai","Error: "+e.message);}
+  aiLoading=false;document.getElementById("send-btn").disabled=false;
+}
+</script>
+</body>
+</html>
