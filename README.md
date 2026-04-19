@@ -96,7 +96,7 @@ A Python 3.11 Cloud Run function (`alejandro-lm-worker`) acts as a proxy between
 - **GET** → reads `organizer.json` and returns it as JSON
 - **POST** → writes the entire app state to `organizer.json`
 - **CORS:** `*` (accessible from any origin)
-- **URL:** `https://alejandro-lm-worker-394750046102.europe-west3.run.app`
+- **URL:** see `.env` → `GOOGLE_CLOUD_URL`
 
 ### Data shape
 

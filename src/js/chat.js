@@ -1,4 +1,17 @@
 // ── Chat / AI ──
+function toggleChat(){
+  const body=document.getElementById("chat-body");
+  const chevron=document.getElementById("chat-chevron");
+  const open=body.classList.toggle("open");
+  chevron.textContent=open?"▼":"▲";
+}
+
+function openChat(){
+  const body=document.getElementById("chat-body");
+  const chevron=document.getElementById("chat-chevron");
+  if(!body.classList.contains("open")){body.classList.add("open");chevron.textContent="▼";}
+}
+
 function clearChat(){
   chatHist=[];
   const wrap=document.getElementById("chat-messages");
@@ -11,6 +24,7 @@ function addBubble(role,text){
   if(!wrap)return;
   const d=document.createElement("div");d.className="bubble "+role;d.textContent=text;
   wrap.appendChild(d);wrap.scrollTop=wrap.scrollHeight;
+  if(role==="ai")openChat();
 }
 
 function buildCtx(){
@@ -26,7 +40,7 @@ Finance actions (end of response):
 ACTION_TX:{expense|income}:{amount}:{description}:{category}:{YYYY-MM-DD}:{none|monthly|bimonthly}
 ACTION_SALARY:{amount}
 ACTION_DEL_TX:{description fragment}
-Actions (end of response): ACTION_ADD:{section}:{text}, ACTION_EVENT:{YYYY-MM-DD}:{HH:MM}:{title}, ACTION_DONE:{section}:{fragment}. Be concise.`;
+Actions (end of response): ACTION_ADD:{section}:{text}, ACTION_EVENT:{YYYY-MM-DD}:{HH:MM}:{title}:{category}, ACTION_DONE:{section}:{fragment}. Event categories: Work, Personal, Health, Social, Travel, Other. Be concise.`;
 }
 
 function parseActs(text){
@@ -34,13 +48,13 @@ function parseActs(text){
   lines.forEach(l=>{
     const a=l.match(/^ACTION_ADD:(\w+):(.+)$/);
     const dn=l.match(/^ACTION_DONE:(\w+):(.+)$/);
-    const ev=l.match(/^ACTION_EVENT:([^:]+):([^:]*):(.+)$/);
+    const ev=l.match(/^ACTION_EVENT:([^:]+):([^:]*):([^:]+):?(.*)$/);
     const tx=l.match(/^ACTION_TX:(expense|income):([0-9.]+):([^:]+):([^:]+):([^:]+):([^:]+)$/);
     const sal=l.match(/^ACTION_SALARY:([0-9.]+)$/);
     const dtx=l.match(/^ACTION_DEL_TX:(.+)$/);
     if(a&&D[a[1]]){D[a[1]].push({id:Date.now(),text:a[2].trim(),done:false});}
     else if(dn&&D[dn[1]]){D[dn[1]]=D[dn[1]].map(i=>i.text.toLowerCase().includes(dn[2].toLowerCase())?{...i,done:true}:i);}
-    else if(ev){D.events.push({id:Date.now(),date:ev[1].trim(),time:ev[2].trim(),title:ev[3].trim()});D.events.sort((a,b)=>a.date.localeCompare(b.date));}
+    else if(ev){const validCat=EVT_CATS.find(c=>c.name===(ev[4]||"").trim());D.events.push({id:Date.now(),date:ev[1].trim(),time:ev[2].trim(),title:ev[3].trim(),category:validCat?validCat.name:"Other"});D.events.sort((a,b)=>a.date.localeCompare(b.date));}
     else if(tx){D.finance.transactions.push({id:"tx"+Date.now(),type:tx[1],amount:parseFloat(tx[2]),description:tx[3].trim(),category:tx[4].trim(),date:tx[5].trim(),recurring:tx[6].trim()});D.finance.transactions.sort((a,b)=>b.date.localeCompare(a.date));}
     else if(sal){D.finance.salary=parseFloat(sal[1]);}
     else if(dtx){D.finance.transactions=D.finance.transactions.filter(t=>!t.description.toLowerCase().includes(dtx[1].toLowerCase()));}

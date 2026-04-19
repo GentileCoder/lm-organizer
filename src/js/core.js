@@ -4,6 +4,18 @@ const MONTHS_S=["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov
 const MONTHS_L=["January","February","March","April","May","June","July","August","September","October","November","December"];
 const DAYS=["Sun","Mon","Tue","Wed","Thu","Fri","Sat"];
 const ECATS=["Housing","Food","Transport","Health","Entertainment","Shopping","Utilities","Other"];
+const DEFAULT_EVT_CATS=[
+  {name:"Work",    color:"#4A90D9"},
+  {name:"Personal",color:"#3d9e75"},
+  {name:"Health",  color:"#E05C5C"},
+  {name:"Social",  color:"#9B6DD4"},
+  {name:"Travel",  color:"#E08A3C"},
+  {name:"Other",   color:"#888888"},
+];
+function evtColor(cat){
+  const cats=D.eventCategories||DEFAULT_EVT_CATS;
+  return (cats.find(c=>c.name===cat)||{color:"#888888"}).color;
+}
 const fmt=n=>"€"+Number(n).toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g,",");
 const esc=s=>String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
 
@@ -19,6 +31,7 @@ let calWeekStart=new Date(now); calWeekStart.setDate(now.getDate()-now.getDay())
 let calDayDate=new Date(now);
 let finTab="overview", finM=now.getMonth(), finY=now.getFullYear();
 let aiLoading=false, chatHist=[];
+let showAddEvt=false, showCatMgr=false, editCatName=null, editEvtIdx=null, delConfirmEvt=null;
 
 // ── Data ──
 let D={
@@ -28,7 +41,8 @@ let D={
   shopping:[{id:1,text:"Descaler for glasswasher",done:false}],
   events:[],
   finance:{salary:0,transactions:[],budgets:{}},
-  review:[]
+  review:[],
+  eventCategories:[...DEFAULT_EVT_CATS]
 };
 
 function safeD(){
@@ -41,6 +55,7 @@ function safeD(){
   if(!D.notes)D.notes=[];
   if(!D.goals)D.goals=[];
   if(!D.shopping)D.shopping=[];
+  if(!D.eventCategories)D.eventCategories=[...DEFAULT_EVT_CATS];
 }
 
 // ── Sync ──
