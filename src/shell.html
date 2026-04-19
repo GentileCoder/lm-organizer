@@ -12,17 +12,34 @@
 </head>
 <body>
 
+<div id="lock-screen">
+  <div id="lock-card">
+    <div id="lock-icon">🔒</div>
+    <h2 id="lock-title">My Organizer</h2>
+    <p id="lock-sub">Enter your credentials to continue</p>
+    <input id="lock-url" type="url" placeholder="Cloud Run URL (https://…)"/>
+    <input id="lock-token" type="password" placeholder="Bearer token"/>
+    <button id="lock-btn" onclick="unlockApp()">Unlock</button>
+    <p id="lock-err"></p>
+  </div>
+</div>
+
 <div id="header">
   <h1>My Organizer</h1>
   <div style="display:flex;align-items:center;gap:8px;">
     <span id="sync-status" class="status-err" style="font-size:11px;">Not connected</span>
     <button class="hbtn" onclick="toggleBar('url-bar')">⚙ URL</button>
+    <button class="hbtn" onclick="toggleBar('token-bar')">🔒 Token</button>
     <button class="hbtn" onclick="toggleBar('key-bar')">🔑 Key</button>
   </div>
 </div>
 <div id="url-bar" class="bar">
   <input id="url-field" type="url" placeholder="https://your-function.run.app"/>
   <button class="sbtn" onclick="connectWorker()">Connect</button>
+</div>
+<div id="token-bar" class="bar">
+  <input id="token-field" type="password" placeholder="Bearer token for Cloud Run"/>
+  <button class="sbtn" onclick="saveToken()">Save</button>
 </div>
 <div id="key-bar" class="bar">
   <input id="key-field" type="password" placeholder="Gemini API key (AIza...)"/>

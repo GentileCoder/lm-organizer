@@ -1,5 +1,5 @@
 // ── Constants ──
-const WKEY="organizer_worker_url", GKEY="gemini_api_key";
+const WKEY="organizer_worker_url", GKEY="gemini_api_key", TKEY="organizer_token";
 const MONTHS_S=["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
 const MONTHS_L=["January","February","March","April","May","June","July","August","September","October","November","December"];
 const DAYS=["Sun","Mon","Tue","Wed","Thu","Fri","Sat"];
@@ -12,6 +12,7 @@ const todayStr=`${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,"0")}
 
 // ── State ──
 let workerUrl=localStorage.getItem(WKEY)||"";
+let workerToken=localStorage.getItem(TKEY)||"";
 let section="calendar";
 let calSel=null, calView={y:now.getFullYear(),m:now.getMonth()}, calMode="month";
 let calWeekStart=new Date(now); calWeekStart.setDate(now.getDate()-now.getDay());
@@ -47,7 +48,11 @@ function setSS(msg){const el=document.getElementById("sync-status");el.textConte
 async function loadRemote(){
   if(!workerUrl)return;setSS("Loading…");
   try{
-    const r=await fetch(workerUrl);if(!r.ok)throw new Error("HTTP "+r.status);
+    const headers={};
+    if(workerToken)headers["Authorization"]="Bearer "+workerToken;
+    const r=await fetch(workerUrl,{headers});
+    if(r.status===401){setSS("Auth failed ✕");addBubble("ai","401: check your auth token (🔒 Token).");return;}
+    if(!r.ok)throw new Error("HTTP "+r.status);
     const d=await r.json();
     if(d&&Object.keys(d).length>0)D=d;
     safeD();setSS("Synced ✓");render();addBubble("ai","Connected! Data loaded.");
@@ -55,8 +60,14 @@ async function loadRemote(){
 }
 async function saveRemote(){
   if(!workerUrl){setSS("Not connected");return;}setSS("Saving…");
-  try{await fetch(workerUrl,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(D)});setSS("Saved ✓");}
-  catch(e){setSS("Save failed");}
+  try{
+    const headers={"Content-Type":"application/json"};
+    if(workerToken)headers["Authorization"]="Bearer "+workerToken;
+    const r=await fetch(workerUrl,{method:"POST",headers,body:JSON.stringify(D)});
+    if(r.status===401){setSS("Auth failed ✕");return;}
+    if(!r.ok)throw new Error("HTTP "+r.status);
+    setSS("Saved ✓");
+  }catch(e){setSS("Save failed");}
 }
 function toggleBar(id){document.getElementById(id).classList.toggle("open");}
 async function connectWorker(){
@@ -69,6 +80,11 @@ function saveKey(){
   const k=document.getElementById("key-field").value.trim();if(!k)return;
   localStorage.setItem(GKEY,k);document.getElementById("key-bar").classList.remove("open");
   addBubble("ai","Gemini key saved! I'm ready.");
+}
+function saveToken(){
+  const t=document.getElementById("token-field").value.trim();if(!t)return;
+  workerToken=t;localStorage.setItem(TKEY,t);document.getElementById("token-bar").classList.remove("open");
+  addBubble("ai","Auth token saved! Reconnecting…");loadRemote();
 }
 
 // ── Navigation ──
@@ -113,8 +129,41 @@ function toggleDone(i){const item=D[section][i];item.done=!item.done;saveRemote(
 function delItem(i){D[section].splice(i,1);saveRemote();render();}
 function updGoal(i,v){D.goals[i].progress=parseInt(v);saveRemote();}
 
+// ── Lock screen ──
+async function unlockApp(){
+  const urlVal=document.getElementById("lock-url").value.trim();
+  const tokVal=document.getElementById("lock-token").value.trim();
+  const errEl=document.getElementById("lock-err");
+  const btn=document.getElementById("lock-btn");
+  if(!urlVal||!tokVal){errEl.textContent="Both fields are required.";return;}
+  btn.disabled=true;btn.textContent="Checking…";errEl.textContent="";
+  try{
+    const r=await fetch(urlVal,{headers:{"Authorization":"Bearer "+tokVal}});
+    if(r.status===401){errEl.textContent="Wrong token — access denied.";btn.disabled=false;btn.textContent="Unlock";return;}
+    if(!r.ok&&r.status!==404){errEl.textContent="Connection error (HTTP "+r.status+").";btn.disabled=false;btn.textContent="Unlock";return;}
+    workerUrl=urlVal;workerToken=tokVal;
+    localStorage.setItem(WKEY,urlVal);localStorage.setItem(TKEY,tokVal);
+    document.getElementById("url-field").value=urlVal;
+    document.getElementById("token-field").value=tokVal;
+    document.getElementById("lock-screen").classList.add("hidden");
+    await loadRemote();
+  }catch(e){errEl.textContent="Network error — check the URL.";btn.disabled=false;btn.textContent="Unlock";}
+}
+
 // ── Init (runs after all functions are declared) ──
-if(workerUrl){document.getElementById("url-field").value=workerUrl;loadRemote();}
 const sk=localStorage.getItem(GKEY)||"";
 if(sk)document.getElementById("key-field").value=sk;
+if(workerToken&&workerUrl){
+  // already authenticated on a previous visit
+  document.getElementById("lock-screen").classList.add("hidden");
+  document.getElementById("url-field").value=workerUrl;
+  document.getElementById("token-field").value=workerToken;
+  loadRemote();
+}else{
+  // pre-fill whatever partial values exist in the lock form
+  if(workerUrl)document.getElementById("lock-url").value=workerUrl;
+  if(workerToken)document.getElementById("lock-token").value=workerToken;
+}
+document.getElementById("lock-url").addEventListener("keydown",e=>{if(e.key==="Enter")document.getElementById("lock-token").focus();});
+document.getElementById("lock-token").addEventListener("keydown",e=>{if(e.key==="Enter")unlockApp();});
 render();

@@ -66,11 +66,12 @@ GitHub Pages picks up the new `index.html` within ~1 minute. Live URL:
 
 ## Configuration (per device, stored in localStorage)
 
-Two values must be entered once per device via the header buttons:
+Three values must be entered once per device via the header buttons:
 
 | Button | What it stores | Value |
 |--------|---------------|-------|
 | ⚙ URL | Google Cloud Run worker URL | See `.env` → `GOOGLE_CLOUD_URL` |
+| 🔒 Token | Bearer auth token for Cloud Run | Must match `TOKEN_SECRET` set in Cloud Run env vars |
 | 🔑 Key | Gemini API key | See `.env` → `GEMINI_API_KEY` |
 
 These are stored in `localStorage` on the device, never in the app data or committed to git.
@@ -172,4 +173,6 @@ One-time · Monthly · Every 2 months · Every 3 months · Every 6 months
 - Chat history is not persisted — cleared on page refresh
 - No offline support — requires internet for GCS sync and Gemini AI
 - The entire data object is re-saved on every change (no partial updates)
-- No authentication — anyone with the worker URL can read/write data
+- Token auth is per-device only — anyone who obtains the bearer token can access data
+
+http://localhost:8080 
