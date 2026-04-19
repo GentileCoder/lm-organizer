@@ -7,6 +7,7 @@ const JS_FILES = [
   'src/js/finance.js',
   'src/js/review.js',
   'src/js/chat.js',
+  'src/js/investment.js',
 ];
 
 const shell  = fs.readFileSync('src/shell.html', 'utf8');
