@@ -2,7 +2,8 @@
 
 function finMigrate(){
   const f=D.finance;
-  if(!f.bull)f.bull=[];
+  if(!f.minijob)f.minijob=[];
+  if(f.bull&&!f._bullMigrated){f.minijob=[...f.bull];f._bullMigrated=true;}
   if(f.salary>0&&!f._incMigrated){
     f.incomeSources.push({id:"inc"+Date.now(),name:"Salary",amount:f.salary,frequency:"monthly"});
     f._incMigrated=true;
@@ -39,12 +40,12 @@ function expInMonth(exp,y,m){
   if(diff<0)return false;
   return diff%({quarterly:3,biannual:6,yearly:12}[exp.recurring]||1)===0;
 }
-function bullForMonth(y,m){
+function minijobForMonth(y,m){
   const ms=`${y}-${String(m+1).padStart(2,"0")}`;
-  return(D.finance.bull||[]).filter(b=>b.date.startsWith(ms)).reduce((s,b)=>s+b.amount,0);
+  return(D.finance.minijob||[]).filter(b=>b.date.startsWith(ms)).reduce((s,b)=>s+b.amount,0);
 }
 function mSumm(y,m){
-  const inc=totalMonthlyIncome()+bullForMonth(y,m);
+  const inc=totalMonthlyIncome()+minijobForMonth(y,m);
   const exps=(D.finance.expenses||[]).filter(e=>expInMonth(e,y,m));
   const exp=exps.reduce((s,e)=>s+e.amount,0);
   return{inc,exp,bal:inc-exp,exps};
@@ -53,14 +54,14 @@ function mSumm(y,m){
 // ── Router ──
 function renderFin(main){
   finMigrate();
-  const tabs=["overview","month","income","expenses","bull"];
-  const tl={overview:"Overview",month:"Month",income:"Income",expenses:"Expenses",bull:"Bull"};
+  const tabs=["overview","month","income","expenses","minijob"];
+  const tl={overview:"Overview",month:"Month",income:"Income",expenses:"Expenses",minijob:"Minijob"};
   let h=`<div class="fin-tabs">${tabs.map(t=>`<button class="fin-tab${finTab===t?" active":""}" onclick="finTab='${t}';render()">${tl[t]}</button>`).join("")}</div>`;
   if(finTab==="overview")h+=finOverview();
   else if(finTab==="month")h+=finMonth();
   else if(finTab==="income")h+=finIncome();
   else if(finTab==="expenses")h+=finExpenses();
-  else if(finTab==="bull")h+=finBull();
+  else if(finTab==="minijob")h+=finMinijob();
   main.innerHTML=h;
 }
 
@@ -202,27 +203,27 @@ function finIncome(){
     ${srcRows||"<p style='font-size:13px;color:#888;padding:8px 0'>No income sources yet.</p>"}
   </div>`;
 }
-// ── Bull tab ──
-function finBull(){
-  const bull=D.finance.bull||[];
+// ── Minijob tab ──
+function finMinijob(){
+  const minijob=D.finance.minijob||[];
 
   // Week bounds (Mon–Sun)
   const dow=now.getDay()===0?6:now.getDay()-1; // 0=Mon
   const weekStart=new Date(now);weekStart.setDate(now.getDate()-dow);weekStart.setHours(0,0,0,0);
   const weekEnd=new Date(weekStart);weekEnd.setDate(weekStart.getDate()+7);
-  const weekTotal=bull.filter(b=>{const d=new Date(b.date+"T12:00:00");return d>=weekStart&&d<weekEnd;}).reduce((s,b)=>s+b.amount,0);
+  const weekTotal=minijob.filter(b=>{const d=new Date(b.date+"T12:00:00");return d>=weekStart&&d<weekEnd;}).reduce((s,b)=>s+b.amount,0);
 
   const thisMonthMs=`${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,"0")}`;
-  const monthTotal=bull.filter(b=>b.date.startsWith(thisMonthMs)).reduce((s,b)=>s+b.amount,0);
-  const yearTotal=bull.filter(b=>b.date.startsWith(String(now.getFullYear()))).reduce((s,b)=>s+b.amount,0);
+  const monthTotal=minijob.filter(b=>b.date.startsWith(thisMonthMs)).reduce((s,b)=>s+b.amount,0);
+  const yearTotal=minijob.filter(b=>b.date.startsWith(String(now.getFullYear()))).reduce((s,b)=>s+b.amount,0);
 
   // 12-month chart
   const months=[];
   for(let i=11;i>=0;i--){
     let m=now.getMonth()-i,y=now.getFullYear();if(m<0){m+=12;y--;}
     const ms=`${y}-${String(m+1).padStart(2,"0")}`;
-    const total=bull.filter(b=>b.date.startsWith(ms)).reduce((s,b)=>s+b.amount,0);
-    const count=bull.filter(b=>b.date.startsWith(ms)).length;
+    const total=minijob.filter(b=>b.date.startsWith(ms)).reduce((s,b)=>s+b.amount,0);
+    const count=minijob.filter(b=>b.date.startsWith(ms)).length;
     months.push({label:MONTHS_S[m],total,count,isCur:y===now.getFullYear()&&m===now.getMonth()});
   }
   const mx=Math.max(...months.map(x=>x.total),1);
@@ -241,10 +242,11 @@ function finBull(){
   const avgMonth=activeMos.length?activeMos.reduce((s,x)=>s+x.total,0)/activeMos.length:0;
 
   // Log sorted desc
-  const rows=[...bull].sort((a,b)=>b.date.localeCompare(a.date)).map(b=>`<div style="display:flex;align-items:center;padding:8px 0;border-bottom:1px solid #1C2E4A;gap:8px">
-    <span style="flex:1;font-size:13px;color:#888">${b.date}</span>
-    <span style="font-size:14px;font-weight:600;color:#3d9e75">+${fmt(b.amount)}</span>
-    <button class="del-btn" onclick="delBull('${b.id}')">✕</button>
+  const rows=[...minijob].sort((a,b)=>b.date.localeCompare(a.date)).map(b=>`<div style="display:flex;align-items:center;padding:8px 0;border-bottom:1px solid #1C2E4A;gap:8px">
+    <span style="font-size:13px;color:#888;flex-shrink:0">${b.date}</span>
+    <span style="flex:1;font-size:13px;color:#aaa">${esc(b.description||"")}</span>
+    <span style="font-size:14px;font-weight:600;color:#3d9e75;flex-shrink:0">+${fmt(b.amount)}</span>
+    <button class="del-btn" onclick="delMinijob('${b.id}')">✕</button>
   </div>`).join("");
 
   return `
@@ -255,14 +257,20 @@ function finBull(){
   </div>
   <div class="sg2" style="margin-bottom:14px">
     <div class="sc"><div class="sl">Avg / active month</div><div class="sv" style="color:#3d9e75">${fmt(avgMonth)}</div></div>
-    <div class="sc"><div class="sl">Total entries</div><div class="sv">${bull.length}</div></div>
+    <div class="sc"><div class="sl">Total entries</div><div class="sv">${minijob.length}</div></div>
   </div>
   <div class="card" style="margin-bottom:14px">
-    <div style="font-size:13px;font-weight:500;margin-bottom:12px">Log entry</div>
+    <div style="font-size:13px;font-weight:500;margin-bottom:12px">Income</div>
+    <div style="display:flex;gap:8px;margin-bottom:8px">
+      <input id="minijob-date" type="date" value="${todayStr}" style="flex:1;width:auto"/>
+      <input id="minijob-amt" type="number" min="0" step="0.01" placeholder="Amount €" style="flex:1;width:auto"/>
+    </div>
     <div style="display:flex;gap:8px">
-      <input id="bull-date" type="date" value="${todayStr}" style="flex:1;width:auto"/>
-      <input id="bull-amt" type="number" min="0" step="0.01" placeholder="Amount €" style="flex:1;width:auto"/>
-      <button class="sbtn" onclick="addBull()">Add</button>
+      <select id="minijob-desc" style="flex:1;width:auto">
+        <option value="Salary">Salary</option>
+        <option value="Tipp">Tipp</option>
+      </select>
+      <button class="sbtn" onclick="addMinijob()">Add</button>
     </div>
   </div>
   <div class="card" style="margin-bottom:14px">
@@ -283,15 +291,16 @@ function addIncSrc(){
   saveRemote();render();
 }
 function delIncSrc(i){D.finance.incomeSources.splice(i,1);saveRemote();render();}
-function addBull(){
-  const date=document.getElementById("bull-date")?.value;
-  const amt=parseFloat(document.getElementById("bull-amt")?.value);
+function addMinijob(){
+  const date=document.getElementById("minijob-date")?.value;
+  const amt=parseFloat(document.getElementById("minijob-amt")?.value);
+  const description=document.getElementById("minijob-desc")?.value||"";
   if(!date||!amt)return;
-  if(!D.finance.bull)D.finance.bull=[];
-  D.finance.bull.push({id:"bull"+Date.now(),date,amount:amt});
+  if(!D.finance.minijob)D.finance.minijob=[];
+  D.finance.minijob.push({id:"minijob"+Date.now(),date,amount:amt,description});
   saveRemote();render();
 }
-function delBull(id){D.finance.bull=D.finance.bull.filter(b=>b.id!==id);saveRemote();render();}
+function delMinijob(id){D.finance.minijob=D.finance.minijob.filter(b=>b.id!==id);saveRemote();render();}
 
 // ── Expenses tab ──
 function finExpenses(){

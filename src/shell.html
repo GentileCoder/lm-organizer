@@ -30,7 +30,6 @@
     <span id="sync-status" class="status-err" style="font-size:11px;">Not connected</span>
     <button class="hbtn" onclick="toggleBar('url-bar')">⚙ URL</button>
     <button class="hbtn" onclick="toggleBar('token-bar')">🔒 Token</button>
-    <button class="hbtn" onclick="toggleBar('key-bar')">🔑 Key</button>
   </div>
 </div>
 <div id="url-bar" class="bar">
@@ -41,10 +40,7 @@
   <input id="token-field" type="password" placeholder="Bearer token for Cloud Run"/>
   <button class="sbtn" onclick="saveToken()">Save</button>
 </div>
-<div id="key-bar" class="bar">
-  <input id="key-field" type="password" placeholder="Gemini API key (AIza...)"/>
-  <button class="sbtn" onclick="saveKey()">Save</button>
-</div>
+<input id="key-field" type="hidden"/>
 
 <div id="nav">
   <button class="nav-btn active" onclick="nav('calendar',this)">▦ Calendar</button>
@@ -57,26 +53,6 @@
 
 <div id="main"></div>
 
-<div id="chat-wrap">
-  <div id="chat-inner">
-    <div id="chat-toggle" onclick="toggleChat()">
-      <span style="font-size:12px;color:#888">AI Assistant</span>
-      <div style="display:flex;align-items:center;gap:8px;">
-        <button id="chat-clear-btn" onclick="event.stopPropagation();clearChat()" style="font-size:11px;color:#888;background:transparent;border:1px solid #1C2E4A;border-radius:6px;padding:3px 8px;cursor:pointer">Clear</button>
-        <span id="chat-chevron" style="font-size:12px;color:#888;">▲</span>
-      </div>
-    </div>
-    <div id="chat-body">
-      <div id="chat-messages">
-        <div class="bubble ai">Hi Alejandro! Use ⚙ URL to sync with Google Cloud, and 🔑 Key for Gemini AI.</div>
-      </div>
-      <div id="chat-input-row">
-        <input id="chat-input" type="text" placeholder='Ask AI — "What should I focus on today?"' onkeydown="if(event.key==='Enter')sendMsg()"/>
-        <button id="send-btn" onclick="sendMsg()">↑</button>
-      </div>
-    </div>
-  </div>
-</div>
 
 <script>
 {{SCRIPT}}
