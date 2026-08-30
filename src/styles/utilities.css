@@ -1,0 +1,245 @@
+/* Shared, non-scoped on purpose: classes used across many unrelated feature components
+   (cards, pill buttons, stat tiles). Keeping these in one global file is the same pattern
+   the legacy single style.css used — splitting them into every component's <style scoped>
+   would duplicate the same rules dozens of times for no benefit. */
+
+.card {
+  background: var(--color-surface-raised);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  padding: 14px;
+  margin-bottom: 10px;
+}
+
+.empty {
+  color: var(--color-text-muted);
+  font-size: 14px;
+  text-align: center;
+  margin-top: 2rem;
+}
+
+.add-row {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+
+.pbtn {
+  background: var(--color-primary);
+  color: #fff;
+  padding: 10px 16px;
+  white-space: nowrap;
+  border-radius: var(--radius-md);
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.sbtn {
+  background: var(--color-primary);
+  color: #fff;
+  padding: 6px 12px;
+  white-space: nowrap;
+  font-size: 13px;
+  border-radius: var(--radius-md);
+  font-weight: 500;
+}
+
+.icon-btn {
+  background: transparent;
+  color: var(--color-text-muted);
+  font-size: 13px;
+  padding: 3px 6px;
+  border-radius: var(--radius-sm);
+}
+.icon-btn:hover {
+  color: var(--color-text);
+}
+
+.del-btn {
+  background: transparent;
+  color: var(--color-text-muted);
+  font-size: 14px;
+  padding: 4px;
+}
+
+.hbtn {
+  font-size: 12px;
+  color: var(--color-text-muted);
+  background: transparent;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  padding: 4px 8px;
+}
+
+.pill-tabs {
+  display: flex;
+  gap: 4px;
+  margin-bottom: 14px;
+  overflow-x: auto;
+}
+.pill-tabs::-webkit-scrollbar {
+  display: none;
+}
+.pill-tab {
+  padding: 6px 14px;
+  border-radius: var(--radius-full);
+  font-size: 13px;
+  white-space: nowrap;
+  flex-shrink: 0;
+  background: var(--color-surface-raised);
+  color: var(--color-text-muted);
+  font-weight: 400;
+}
+.pill-tab.active {
+  background: var(--color-primary);
+  color: #fff;
+  font-weight: 600;
+}
+
+.cat-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 7px 0;
+  border-bottom: 1px solid var(--color-surface);
+}
+.cat-swatch {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.evt-edit-form {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 8px 0;
+  border-bottom: 1px solid var(--color-surface);
+}
+
+.inv-label {
+  font-size: 11px;
+  color: var(--color-text-muted);
+  margin-bottom: 4px;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.section-label {
+  font-size: 11px;
+  color: var(--color-text-muted);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.fin-tabs {
+  display: flex;
+  gap: 4px;
+  margin-bottom: 16px;
+  overflow-x: auto;
+}
+.fin-tab {
+  padding: 6px 13px;
+  border-radius: var(--radius-full);
+  font-size: 12px;
+  white-space: nowrap;
+  background: var(--color-surface-raised);
+  color: var(--color-text-muted);
+}
+.fin-tab.active {
+  background: var(--color-primary);
+  color: #fff;
+  font-weight: 500;
+}
+
+.sg2 {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  margin-bottom: 14px;
+}
+.sg3 {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 8px;
+  margin-bottom: 14px;
+}
+.sc {
+  background: var(--color-surface-raised);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  padding: 12px;
+  text-align: center;
+}
+.sl {
+  font-size: 11px;
+  color: var(--color-text-muted);
+  margin-bottom: 4px;
+}
+.sv {
+  font-size: 15px;
+  font-weight: 500;
+}
+
+.cal-nav-btn {
+  background: var(--color-surface);
+  color: var(--color-text-muted);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  padding: 5px 12px;
+  font-size: 16px;
+}
+.cal-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 2px;
+  margin-bottom: 4px;
+}
+.cal-day {
+  border-radius: var(--radius-md);
+  padding: 4px 3px;
+  cursor: pointer;
+  min-height: 68px;
+  border: 1px solid transparent;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  overflow: hidden;
+}
+.cal-day span {
+  font-size: 12px;
+  font-weight: 500;
+  text-align: center;
+  display: block;
+  margin-bottom: 3px;
+}
+.cal-day.today {
+  border-color: var(--color-primary);
+}
+.cal-day.today > span {
+  color: var(--color-primary);
+}
+.cal-day.selected {
+  background: var(--color-primary);
+}
+.cal-day.selected > span {
+  color: #fff;
+}
+.cal-evt-chip {
+  font-size: 9px;
+  color: #fff;
+  border-radius: 3px;
+  padding: 1px 4px;
+  margin-bottom: 2px;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  line-height: 1.5;
+  font-weight: 500;
+}
+.cal-evt-more {
+  font-size: 9px;
+  color: var(--color-text-muted);
+  padding-left: 2px;
+}

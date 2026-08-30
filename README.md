@@ -1,178 +1,113 @@
 # LM Organizer
 
-A personal organizer PWA (Progressive Web App) built as a single HTML file. Hosted on GitHub Pages and installable on iPhone via Safari → Share → Add to Home Screen.
+A personal organizer PWA. Vue 3 + Vite SPA, deployed to Firebase Hosting, backed by a Google Cloud Run
+proxy in front of a GCS bucket, with Firebase Authentication gating access. Hosting and auth share
+the same `gentilecoder` Firebase/GCP project.
+
+The previous hand-built single-`index.html` vanilla-JS version lives in [`legacy/`](legacy/) for
+reference during the migration audit — it is not built or deployed anymore.
 
 ---
 
-## How It Works
+## Stack
 
-The app is a **single `index.html` file** — no frameworks, no build dependencies, pure vanilla HTML/CSS/JS. It talks to two external services: a Google Cloud Run proxy for data storage, and the Gemini API for AI assistance.
+- **Vue 3** (Composition API, `<script setup>`) + **Vite**
+- **Pinia** for state — one `organizer` store holding the whole synced data blob, plus an `auth` store wrapping Firebase
+- **vue-router** (history mode — Firebase Hosting's rewrite rule handles the deep-link fallback)
+- **Firebase Authentication** (username, mapped to a synthetic email — see `src/utils/accounts.js`) for real login, replacing the old shared-bearer-token lock screen
+- **Firebase Hosting** for the built static site
+- Plain CSS custom properties (`src/styles/tokens.css`) carrying over the app's existing dark palette — no design system swap
 
-### Source → Build → Deploy
-
-```
-src/              Edit these files
-  shell.html      HTML structure and placeholders
-  style.css       All CSS
-  js/
-    core.js       Constants, state, data, sync, nav, tasks/notes/goals/shopping
-    calendar.js   Calendar (month / week / day views)
-    finance.js    Finance (overview, month, expenses, recurring, budget)
-    review.js     Review / ideas scratchpad
-    chat.js       AI chat, action parser, Gemini API call
-
-build.js          Assembles src/ → index.html
-serve.js          Local dev server (rebuilds on every browser reload)
-index.html        ← Generated output. Deploy this. Never edit directly.
-```
-
-**Never edit `index.html` directly.** It gets overwritten on every build. All changes go into `src/`.
-
----
-
-## Development Workflow
-
-### Start the dev server
+## Development
 
 ```bash
-npm run dev
+npm install
+npm run dev       # http://localhost:3080/
+npm run build     # outputs to dist/
+npm run lint
 ```
 
-Opens a local server at `http://localhost:8080`. Every browser refresh automatically rebuilds `index.html` from the `src/` files so you always see the latest changes.
+Environment variables live in `.env.development` / `.env.production` (both committed — see
+`.env.example` for what each one is and why none of them are secret). Firebase config values are
+public identifiers, not secrets; access control happens in the Cloud Run backend's allowlist, not
+by hiding the client config.
 
-### Build without serving
+## Deployment
+
+Deploys go through the [Firebase CLI](https://firebase.google.com/docs/cli):
 
 ```bash
 npm run build
+npx firebase-tools deploy --only hosting
 ```
 
-Writes the assembled `index.html` to the project root.
+(`.firebaserc` already points at the `gentilecoder` project, and `firebase.json` configures `dist`
+as the public directory with an SPA rewrite.) The first time, you'll need `npx firebase-tools login`
+to authenticate with the Google account that has access to `gentilecoder`.
 
-### Deploy to GitHub Pages
+To automate this on push to `main` instead of deploying by hand, run `npx firebase-tools init
+hosting:github` from the repo — it walks you through creating a service account and wires up the
+GitHub Actions workflow + repo secret itself; not set up yet since it needs your GitHub/Google
+auth interactively.
 
-After making changes:
+## Backend & storage
 
-```bash
-npm run build
-git add .
-git commit -m "your message"
-git push
-```
+Unchanged from before: one JSON blob (`organizer.json` per user) in a GCS bucket
+(`alejandro-live-manager-app`, project `gentilecoder`, `europe-west3`), read/written through the
+`alejandro-lm-worker` Cloud Run function in [`cloud_run/main.py`](cloud_run/main.py). What changed
+is *how* a request proves who it is:
 
-GitHub Pages picks up the new `index.html` within ~1 minute. Live URL:
-`https://{username}.github.io/{repo-name}`
+- The frontend attaches a Firebase ID token (`Authorization: Bearer <token>`), refreshed
+  automatically by the Firebase SDK — not a permanent secret typed in once and stored forever.
+- The backend verifies that token with `firebase-admin`, then looks the resulting Firebase `uid` up
+  in `ALLOWED_USERS`, a Cloud Run env var mapping `{"<uid>": "<gcs-filename>"}`. A valid Firebase
+  login alone isn't sufficient — only uids in that map get a file back. This is what keeps the app
+  closed to just the people who should have it.
 
----
+### Remaining manual setup (not done by this migration — needs your GCP/Firebase console access)
 
-## Configuration (per device, stored in localStorage)
+1. Enable **Firebase Authentication** on the `gentilecoder` GCP project, turn on the **Email/Password**
+   provider, and create the two accounts (you + Thais) by hand, using `usernameToEmail()`'s output
+   as the email field — there's no public sign-up flow.
+2. Fill in `VITE_FIREBASE_*` in `.env.development` and `.env.production` from Firebase Console →
+   Project settings → Your apps.
+3. Firebase Hosting's own domain (`gentilecoder.web.app` / `gentilecoder.firebaseapp.com`) is
+   authorized for Auth automatically; add a custom domain here too, if you get one.
+4. Read the *current* Cloud Run `USERS` env var (`gcloud run services describe alejandro-lm-worker
+   --format=...` or the console) before setting `ALLOWED_USERS`, so both existing data files keep
+   being used — don't guess the filenames.
+5. Deploy the updated `cloud_run/` (with `ALLOWED_USERS` set) once both Firebase accounts exist and
+   you have their uids.
+6. `npx firebase-tools login`, then `npm run build && npx firebase-tools deploy --only hosting`.
 
-Three values must be entered once per device via the header buttons:
-
-| Button | What it stores | Value |
-|--------|---------------|-------|
-| ⚙ URL | Google Cloud Run worker URL | See `.env` → `GOOGLE_CLOUD_URL` |
-| 🔒 Token | Bearer auth token for Cloud Run | Must match `TOKEN_SECRET` set in Cloud Run env vars |
-| 🔑 Key | Gemini API key | See `.env` → `GEMINI_API_KEY` |
-
-These are stored in `localStorage` on the device, never in the app data or committed to git.
-
----
-
-## Backend & Storage
-
-### Data storage — Google Cloud Storage
-
-All app data is one JSON file (`organizer.json`) in a GCS bucket:
-
-- **Bucket:** `alejandro-live-manager-app`
-- **Project:** `gentilecoder`
-- **Region:** `europe-west3` (Frankfurt)
-- **Service account:** `lm-worker@gentilecoder.iam.gserviceaccount.com`
-
-### Cloud Run proxy
-
-A Python 3.11 Cloud Run function (`alejandro-lm-worker`) acts as a proxy between the app and GCS:
-
-- **GET** → reads `organizer.json` and returns it as JSON
-- **POST** → writes the entire app state to `organizer.json`
-- **CORS:** `*` (accessible from any origin)
-- **URL:** see `.env` → `GOOGLE_CLOUD_URL`
-
-### Data shape
+## Data shape
 
 ```json
 {
-  "tasks":    [{ "id": 1, "text": "...", "done": false }],
-  "notes":    [{ "id": 1, "text": "...", "done": false }],
-  "goals":    [{ "id": 1, "text": "...", "progress": 60 }],
-  "shopping": [{ "id": 1, "text": "...", "done": false }],
-  "events":   [{ "id": 1, "date": "2026-04-10", "time": "10:00", "title": "..." }],
+  "tasks": [{ "id": 1, "text": "...", "done": false }],
+  "notes": [{ "id": 1, "text": "...", "done": false }],
+  "goals": [{ "id": 1, "text": "...", "plan": "...", "tasks": [{ "id": 1, "text": "...", "done": false }] }],
+  "shopping": [{ "id": 1, "name": "...", "items": [{ "id": 1, "text": "...", "done": false, "price": 0, "url": "" }] }],
+  "events": [{ "id": 1, "date": "2026-04-10", "time": "10:00", "title": "...", "category": "Work", "recurring": "none", "exceptions": [] }],
+  "eventCategories": [{ "name": "Work", "color": "#4A90D9" }],
   "finance": {
-    "salary": 0,
-    "transactions": [{
-      "id": "tx123",
-      "type": "expense|income",
-      "amount": 50.00,
-      "description": "Groceries",
-      "category": "Food",
-      "date": "2026-04-10",
-      "recurring": "none|monthly|bimonthly|quarterly|biannual"
-    }],
-    "budgets": { "Food": 300, "Housing": 800 }
+    "incomeSources": [{ "id": "inc1", "name": "Salary", "amount": 3000, "frequency": "monthly" }],
+    "expenseCategories": ["Housing", "Food"],
+    "expenses": [{ "id": "exp1", "category": "Housing", "amount": 800, "recurring": "monthly", "withdrawDay": 1, "startDate": "2026-01-01" }],
+    "minijob": [{ "id": "minijob1", "date": "2026-04-10", "amount": 50, "description": "Salary" }],
+    "budgets": {}
   },
-  "review": [{ "id": 1, "text": "...", "date": "2026-04-10" }]
+  "review": [{ "id": 1, "text": "...", "date": "2026-04-10" }],
+  "investments": [{ "id": 1, "name": "...", "initial": 50000, "annualROI": 12.3, "years": [] }]
 }
 ```
 
----
+Goal progress and shopping-list totals are *derived* from subtask/item state at render time, not
+stored fields — despite what an earlier version of this doc implied.
 
-## AI Assistant
+## Known limitations
 
-- **Model:** `gemini-3-flash-preview` via the Gemini API (free tier)
-- **Endpoint:** `https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash-preview:generateContent`
-- The AI receives the full app state as context on every message (freshly injected as the first turn)
-- Full conversation history is maintained in memory for multi-turn dialogue (cleared on page refresh or "Clear" button)
-
-### AI actions
-
-The AI can modify app data by appending special tokens to its response:
-
-| Token | Effect |
-|-------|--------|
-| `ACTION_ADD:{section}:{text}` | Adds item to tasks, notes, shopping, or goals |
-| `ACTION_DONE:{section}:{fragment}` | Marks matching item as done |
-| `ACTION_EVENT:{YYYY-MM-DD}:{HH:MM}:{title}` | Adds a calendar event |
-| `ACTION_TX:{type}:{amount}:{description}:{category}:{date}:{recurring}` | Adds a finance transaction |
-| `ACTION_SALARY:{amount}` | Sets the monthly salary |
-| `ACTION_DEL_TX:{fragment}` | Deletes a matching transaction |
-
----
-
-## Sections
-
-| Nav | Section | Description |
-|-----|---------|-------------|
-| ▦ Calendar | `calendar.js` | Month / week / day views, add and delete events |
-| ✓ Tasks | `core.js` | To-do list with done toggle and delete |
-| ≡ Notes | `core.js` | Freeform notes with done toggle and delete |
-| ◎ Goals | `core.js` | Goals with 0–100% progress slider |
-| ⊕ Shopping | `core.js` | Shopping list with done toggle and delete |
-| € Finance | `finance.js` | Overview, Month, Expenses, Recurring, Budget sub-tabs |
-| ★ Review | `review.js` | Ideas / feature requests scratchpad with clipboard export |
-
-### Finance categories
-Housing · Food · Transport · Health · Entertainment · Shopping · Utilities · Other
-
-### Finance recurring options
-One-time · Monthly · Every 2 months · Every 3 months · Every 6 months
-
----
-
-## Known Limitations
-
-- Chat history is not persisted — cleared on page refresh
-- No offline support — requires internet for GCS sync and Gemini AI
-- The entire data object is re-saved on every change (no partial updates)
-- Token auth is per-device only — anyone who obtains the bearer token can access data
-
-http://localhost:8080 
+- The Gemini AI chat feature referenced by older docs is fully deactivated in the legacy app and
+  was not migrated — reviving it is new scope, not part of this rewrite.
+- The entire data blob is re-saved on every change (debounced ~400ms client-side); there's still no
+  partial-update endpoint.

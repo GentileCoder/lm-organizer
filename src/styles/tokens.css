@@ -1,0 +1,25 @@
+/* The app's existing dark palette, promoted from hardcoded hex values (legacy src/style.css)
+   to named custom properties. Values are unchanged — this is a structural port, not a redesign. */
+:root {
+  --color-bg: #060c18;
+  --color-surface: #0c1525;
+  --color-surface-raised: #0f1e35;
+  --color-border: #1c2e4a;
+
+  --color-text: #e8e8e8;
+  --color-text-muted: #888888;
+  --color-text-faint: #555555;
+
+  --color-primary: #c9a227;
+  --color-success: #3d9e75;
+  --color-danger: #d85a30;
+  --color-danger-strong: #e05c5c;
+  --color-info: #4a90d9;
+
+  --radius-sm: 6px;
+  --radius-md: 8px;
+  --radius-lg: 12px;
+  --radius-full: 20px;
+
+  --transition-fast: 120ms ease;
+}
