@@ -1,10 +1,20 @@
 <script setup>
 import { computed } from 'vue'
+import { useRouter } from 'vue-router'
 import { useOrganizerStore } from '../../stores/organizer.js'
 import { useAuthStore } from '../../stores/auth.js'
 
 const organizerStore = useOrganizerStore()
 const authStore = useAuthStore()
+const router = useRouter()
+
+// Same reason as LoginView's submit(): the router guard only re-checks auth state on
+// navigation, so logging out has to explicitly navigate to /login or the chrome-less
+// current view is left showing behind it.
+async function logout() {
+  await authStore.logout()
+  router.push({ name: 'Login' })
+}
 
 const statusLabel = computed(() => {
   const s = organizerStore.status
@@ -27,7 +37,7 @@ const statusClass = computed(() => {
     <h1>My Organizer</h1>
     <div class="header-actions">
       <span class="sync-status" :class="statusClass">{{ statusLabel }}</span>
-      <button class="hbtn" @click="authStore.logout()">Log out</button>
+      <button class="hbtn" @click="logout">Log out</button>
     </div>
   </header>
 </template>

@@ -1,15 +1,21 @@
 <script setup>
 import { ref } from 'vue'
+import { useRouter } from 'vue-router'
 import { useAuthStore } from '../stores/auth.js'
 import { usernameToEmail } from '../utils/accounts.js'
 
 const authStore = useAuthStore()
+const router = useRouter()
 const username = ref('')
 const password = ref('')
 
 async function submit() {
   if (!username.value.trim() || !password.value) return
-  await authStore.login(usernameToEmail(username.value), password.value)
+  // The router only re-checks auth state on navigation, not just because a reactive
+  // ref changed — a successful sign-in has to explicitly navigate away from /login,
+  // or the app silently sits on the login screen despite being authenticated.
+  const ok = await authStore.login(usernameToEmail(username.value), password.value)
+  if (ok) router.push({ name: 'Calendar' })
 }
 </script>
 
