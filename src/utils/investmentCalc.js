@@ -14,31 +14,31 @@ export function calcInvestment({ name, initial, monthlyRev, monthlyCost, growth 
     yearProfit *= 1 + growth / 100
   }
 
-  let score, scoreLabel, scoreColor
+  let score, scoreLabel, scoreTier
   if (annualROI < 0) {
     score = 0
     scoreLabel = 'Loss — negative cash flow'
-    scoreColor = '#E05C5C'
+    scoreTier = 'loss'
   } else if (annualROI < 5) {
     score = 1
     scoreLabel = 'Poor'
-    scoreColor = '#d85a30'
+    scoreTier = 'poor'
   } else if (annualROI < 15) {
     score = 2
     scoreLabel = 'Fair'
-    scoreColor = '#E08A3C'
+    scoreTier = 'fair'
   } else if (annualROI < 30) {
     score = 3
     scoreLabel = 'Good'
-    scoreColor = '#C9A227'
+    scoreTier = 'good'
   } else if (annualROI < 50) {
     score = 4
     scoreLabel = 'Great'
-    scoreColor = '#5CB85C'
+    scoreTier = 'great'
   } else {
     score = 5
     scoreLabel = 'Excellent'
-    scoreColor = '#3d9e75'
+    scoreTier = 'excellent'
   }
 
   return {
@@ -54,6 +54,6 @@ export function calcInvestment({ name, initial, monthlyRev, monthlyCost, growth 
     years,
     score,
     scoreLabel,
-    scoreColor,
+    scoreTier,
   }
 }

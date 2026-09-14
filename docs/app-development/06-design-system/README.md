@@ -17,6 +17,23 @@ values. AAXON's document is a good structural template to follow; its brand is n
 real, already documented, and already close to scale-shaped (see that doc's §7) even though it isn't
 tokenized as a formal scale yet.
 
+> **Note:** `lm-organizer-design-system.md` still describes the single-theme system as it existed
+> right after the Vue migration. Since then the app grew into a **7-theme, light+dark selectable
+> system** (`src/styles/tokens.css`, `src/theme/themes.js`) — the doc hasn't been updated to match
+> yet. Treat it as a description of the *original* shipped look, not the current one, until it's
+> revised.
+
+All 13 explored directions now have matching per-theme documentation, split by whether they shipped:
+
+- [`themes/`](themes/) — the **7 shipped** themes (Deepwork, Paper, Pulse, Sunset, Real Madrid,
+  Cuba, Brazil), values copied from the live `src/styles/tokens.css`, plus exactly which decorative
+  touches (stars, stripes, the Sunset glow) actually made it into `AppHeader.vue`/`ThemeAccent.vue`
+  versus what only existed in the original mockup.
+- [`designs/`](designs/) — the **6 that weren't shipped** (Bloom, Block,
+  Aurora, Terminal, and Editorial/Swiss — the two that hit a real structural limitation rather than
+  just not being chosen), so their full color/font specs survive independent of any chat session or
+  Claude Design artifact link.
+
 ## Why this isn't written yet
 
 A design system is only worth having once there's a real second (or third) app that needs to look
@@ -56,10 +73,15 @@ against.
 
 ## Open decisions for whenever this gets started
 
-- Primary accent color (LM Organizer currently uses `#C9A227`, a muted gold — keep, or pick
-  something new and distinct from any one app's identity?)
-- Default color scheme (LM Organizer is dark-only today — does the system need to support light
-  mode at all, or standardize on dark-first?)
-- Typeface pairing (LM Organizer currently just uses the system UI font stack — no display face)
-- Icon set (LM Organizer uses plain emoji for nav/section icons today — keep that low-effort
-  approach, or standardize on an icon library like `lucide-vue-next` the way the AAXON spec does?)
+- Primary accent color — LM Organizer no longer has just one; it now ships 7 selectable identities
+  (see `../lm-organizer-design-system.md`'s stale-notice above). A cross-app system would need its
+  own single answer, independent of any one theme's choice.
+- Default color scheme — no longer dark-only; every LM Organizer theme now has both light and dark.
+  A cross-app system still needs its own default, but "does it need to support light mode at all"
+  is already answered (yes) by the app itself.
+- Typeface pairing — LM Organizer now uses a different pairing per theme rather than one system
+  face; a cross-app system would need to pick just one (or its own small set).
+- Icon set — LM Organizer's real app still uses plain emoji for nav/section icons (the Claude
+  Design mockups avoid emoji per that tool's own content rules, which don't apply to the shipped
+  app) — keep that low-effort approach, or standardize on an icon library like `lucide-vue-next`
+  the way the AAXON spec does?

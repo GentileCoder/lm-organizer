@@ -4,6 +4,7 @@ import { useAuthStore } from './stores/auth.js'
 import { useOrganizerStore } from './stores/organizer.js'
 import AppHeader from './components/layout/AppHeader.vue'
 import AppNav from './components/layout/AppNav.vue'
+import ThemeAccent from './components/layout/ThemeAccent.vue'
 
 const authStore = useAuthStore()
 const organizerStore = useOrganizerStore()
@@ -20,6 +21,7 @@ watch(
 </script>
 
 <template>
+  <ThemeAccent />
   <AppHeader v-if="showChrome" />
   <AppNav v-if="showChrome" />
   <main id="main-content">

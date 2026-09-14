@@ -13,6 +13,7 @@ const router = createRouter({
     { path: '/finance', name: 'Finance', component: () => import('../views/FinanceView.vue') },
     { path: '/investment', name: 'Investment', component: () => import('../views/InvestmentView.vue') },
     { path: '/workspace', name: 'Workspace', component: () => import('../views/WorkspaceView.vue') },
+    { path: '/settings', name: 'Settings', component: () => import('../views/SettingsView.vue') },
     { path: '/:pathMatch(.*)*', name: 'NotFound', redirect: { name: 'Calendar' } },
   ],
 })

@@ -2,6 +2,7 @@
 import { reactive, ref } from 'vue'
 import { useOrganizerStore } from '../stores/organizer.js'
 import { calcInvestment } from '../utils/investmentCalc.js'
+import { SCORE_TIERS, tierClass } from '../utils/investmentTiers.js'
 import InvestmentResultCard from '../components/Investment/InvestmentResultCard.vue'
 import SavedInvestmentCard from '../components/Investment/SavedInvestmentCard.vue'
 
@@ -9,15 +10,6 @@ const organizerStore = useOrganizerStore()
 
 const form = reactive({ name: '', initial: '', monthlyRev: '', monthlyCost: '', growth: '' })
 const result = ref(null)
-
-const scoreScale = [
-  ['⭐⭐⭐⭐⭐ Excellent', 'ROI > 50%', '#3d9e75'],
-  ['⭐⭐⭐⭐ Great', 'ROI 30–50%', '#5CB85C'],
-  ['⭐⭐⭐ Good', 'ROI 15–30%', '#C9A227'],
-  ['⭐⭐ Fair', 'ROI 5–15%', '#E08A3C'],
-  ['⭐ Poor', 'ROI 0–5%', '#d85a30'],
-  ['💸 Loss', 'Negative ROI', '#E05C5C'],
-]
 
 function calculate() {
   result.value = calcInvestment({
@@ -85,9 +77,9 @@ function saveAnalysis() {
       <b>Growth rate</b> — expected annual increase in profits (use conservative estimates).
     </div>
     <div class="scale-grid">
-      <div v-for="[label, range, color] in scoreScale" :key="label" class="scale-row">
-        <span>{{ label }}</span>
-        <span class="scale-range" :style="{ color }">{{ range }}</span>
+      <div v-for="t in SCORE_TIERS" :key="t.tier" class="scale-row">
+        <span>{{ t.stars }} {{ t.label }}</span>
+        <span class="scale-range" :class="tierClass(t.tier)">{{ t.range }}</span>
       </div>
     </div>
   </div>

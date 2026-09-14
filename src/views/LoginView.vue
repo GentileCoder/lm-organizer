@@ -71,7 +71,7 @@ async function submit() {
 .lock-btn {
   width: 100%;
   background: var(--color-primary);
-  color: #fff;
+  color: var(--color-primary-text, #fff);
   padding: 12px;
   font-size: 15px;
   font-weight: 600;

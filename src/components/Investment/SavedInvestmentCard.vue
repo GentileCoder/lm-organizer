@@ -2,6 +2,7 @@
 import { computed } from 'vue'
 import { fmtCurrency } from '../../utils/format.js'
 import { useOrganizerStore } from '../../stores/organizer.js'
+import { tierClass, tierFromScore } from '../../utils/investmentTiers.js'
 
 const props = defineProps({ inv: { type: Object, required: true } })
 const organizerStore = useOrganizerStore()
@@ -12,6 +13,9 @@ const paybackStr = computed(() => {
   if (m === Infinity) return 'Never'
   return m <= 24 ? `${m}mo` : `${(m / 12).toFixed(1)}yr`
 })
+// Analyses saved before scoreTier existed only have a numeric score — fall back to
+// deriving the tier from that so old saved analyses still get the right color.
+const roiClass = computed(() => tierClass(props.inv.scoreTier || tierFromScore(props.inv.score)))
 </script>
 
 <template>
@@ -23,14 +27,16 @@ const paybackStr = computed(() => {
       </div>
       <div class="score">
         <div class="stars">{{ stars }}</div>
-        <div class="roi" :style="{ color: inv.scoreColor }">{{ inv.annualROI.toFixed(1) }}%</div>
+        <div class="roi" :class="roiClass">{{ inv.annualROI.toFixed(1) }}%</div>
       </div>
       <button class="del-btn" @click="organizerStore.deleteInvestment(inv.id)">✕</button>
     </div>
     <div class="footer">
       <span
         >Cash flow
-        <span class="cash-flow" :style="{ color: inv.monthlyProfit >= 0 ? '#3d9e75' : '#E05C5C' }"
+        <span
+          class="cash-flow"
+          :style="{ color: inv.monthlyProfit >= 0 ? 'var(--color-success)' : 'var(--color-danger-strong)' }"
           >{{ fmtCurrency(inv.monthlyProfit) }}/mo</span
         ></span
       >

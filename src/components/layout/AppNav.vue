@@ -6,6 +6,7 @@ const links = [
   { to: { name: 'Finance' }, label: '€ Finance' },
   { to: { name: 'Investment' }, label: '📈 Invest' },
   { to: { name: 'Workspace' }, label: '✏ Notes' },
+  { to: { name: 'Settings' }, label: '⚙ Settings' },
 ]
 </script>
 
@@ -40,6 +41,6 @@ const links = [
 }
 .nav-btn.active {
   background: var(--color-primary);
-  color: #fff;
+  color: var(--color-primary-text, #fff);
 }
 </style>

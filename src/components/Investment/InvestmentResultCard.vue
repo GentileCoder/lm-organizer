@@ -1,6 +1,7 @@
 <script setup>
 import { computed } from 'vue'
 import { fmtCurrency } from '../../utils/format.js'
+import { tierClass } from '../../utils/investmentTiers.js'
 
 const props = defineProps({ result: { type: Object, required: true } })
 const emit = defineEmits(['save'])
@@ -16,10 +17,23 @@ const breakEvenYearIndex = computed(() =>
 )
 const starsStr = computed(() => (props.result.score > 0 ? '⭐'.repeat(props.result.score) : '💸'))
 
+const paybackClass = computed(() => {
+  const r = props.result
+  if (noBreakEven.value) return 'tier-loss'
+  return tierClass(r.scoreTier)
+})
+const breakEvenClass = computed(() => {
+  const r = props.result
+  if (noBreakEven.value) return 'tier-loss'
+  if (r.paybackMonths < 24) return 'tier-excellent'
+  if (r.paybackMonths < 60) return 'tier-good'
+  return 'tier-fair'
+})
+
 function yearBarColor(y) {
   const r = props.result
   const reached = r.initial > 0 && y.cumulative >= r.initial
-  return reached ? '#3d9e75' : y.cumulative > 0 ? '#C9A227' : '#E05C5C'
+  return reached ? 'var(--color-success)' : y.cumulative > 0 ? 'var(--color-primary)' : 'var(--color-danger-strong)'
 }
 function yearPct(y) {
   const r = props.result
@@ -30,16 +44,16 @@ function yearPct(y) {
 <template>
   <div class="card score-card">
     <div class="stars">{{ starsStr }}</div>
-    <div class="score-label" :style="{ color: result.scoreColor }">{{ result.scoreLabel }}</div>
+    <div class="score-label" :class="tierClass(result.scoreTier)">{{ result.scoreLabel }}</div>
     <div class="score-metrics">
       <div>
         <div class="score-metric-label">Annual ROI</div>
-        <div class="score-metric-value" :style="{ color: result.scoreColor }">{{ result.annualROI.toFixed(1) }}%</div>
+        <div class="score-metric-value" :class="tierClass(result.scoreTier)">{{ result.annualROI.toFixed(1) }}%</div>
       </div>
       <div class="divider"></div>
       <div>
         <div class="score-metric-label">Payback</div>
-        <div class="score-metric-value" :style="{ color: noBreakEven ? '#E05C5C' : result.scoreColor }">
+        <div class="score-metric-value" :class="paybackClass">
           {{ paybackStr }}
         </div>
       </div>
@@ -50,31 +64,23 @@ function yearPct(y) {
     <div class="inv-label" style="margin-bottom: 10px">Key Metrics</div>
     <div class="metric-row">
       <span class="metric-label">Monthly cash flow</span>
-      <span class="metric-value" :style="{ color: result.monthlyProfit >= 0 ? '#3d9e75' : '#E05C5C' }">{{
-        fmtCurrency(result.monthlyProfit)
-      }}</span>
+      <span
+        class="metric-value"
+        :style="{ color: result.monthlyProfit >= 0 ? 'var(--color-success)' : 'var(--color-danger-strong)' }"
+        >{{ fmtCurrency(result.monthlyProfit) }}</span
+      >
     </div>
     <div class="metric-row">
       <span class="metric-label">Annual net profit</span>
-      <span class="metric-value" :style="{ color: result.annualProfit >= 0 ? '#3d9e75' : '#E05C5C' }">{{
-        fmtCurrency(result.annualProfit)
-      }}</span>
+      <span
+        class="metric-value"
+        :style="{ color: result.annualProfit >= 0 ? 'var(--color-success)' : 'var(--color-danger-strong)' }"
+        >{{ fmtCurrency(result.annualProfit) }}</span
+      >
     </div>
     <div class="metric-row">
       <span class="metric-label">Break-even point</span>
-      <span
-        class="metric-value"
-        :style="{
-          color: noBreakEven
-            ? '#E05C5C'
-            : result.paybackMonths < 24
-              ? '#3d9e75'
-              : result.paybackMonths < 60
-                ? '#C9A227'
-                : '#E08A3C',
-        }"
-        >{{ paybackStr }}</span
-      >
+      <span class="metric-value" :class="breakEvenClass">{{ paybackStr }}</span>
     </div>
     <div class="metric-row">
       <span class="metric-label">Initial investment</span>
@@ -119,7 +125,10 @@ function yearPct(y) {
 
     <div class="totals-block">
       <div class="totals-label">Cumulative profit after 3 years</div>
-      <div class="totals-value" :style="{ color: result.years[2].cumulative >= 0 ? '#3d9e75' : '#E05C5C' }">
+      <div
+        class="totals-value"
+        :style="{ color: result.years[2].cumulative >= 0 ? 'var(--color-success)' : 'var(--color-danger-strong)' }"
+      >
         {{ fmtCurrency(result.years[2].cumulative) }}
       </div>
       <div v-if="result.initial > 0" class="roi-note">

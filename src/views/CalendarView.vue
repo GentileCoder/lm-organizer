@@ -134,7 +134,7 @@ function navigate(dir) {
 }
 .mode-btn.active {
   background: var(--color-primary);
-  color: #fff;
+  color: var(--color-primary-text, #fff);
   font-weight: 500;
 }
 .nav-row {

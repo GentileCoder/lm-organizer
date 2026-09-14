@@ -1,25 +1,318 @@
-/* The app's existing dark palette, promoted from hardcoded hex values (legacy src/style.css)
-   to named custom properties. Values are unchanged — this is a structural port, not a redesign. */
+/* Shape stays constant across every theme — only color, font, and card shadow vary.
+   See docs/app-development/06-design-system/ for how each theme was derived. */
 :root {
-  --color-bg: #060c18;
-  --color-surface: #0c1525;
-  --color-surface-raised: #0f1e35;
-  --color-border: #1c2e4a;
-
-  --color-text: #e8e8e8;
-  --color-text-muted: #888888;
-  --color-text-faint: #555555;
-
-  --color-primary: #c9a227;
-  --color-success: #3d9e75;
-  --color-danger: #d85a30;
-  --color-danger-strong: #e05c5c;
-  --color-info: #4a90d9;
-
   --radius-sm: 6px;
   --radius-md: 8px;
   --radius-lg: 12px;
   --radius-full: 20px;
 
   --transition-fast: 120ms ease;
+}
+
+/* ── Deepwork ── */
+:root[data-app-theme='deepwork'][data-app-mode='dark'] {
+  --color-bg: #0a0d14;
+  --color-surface: #10141c;
+  --color-surface-raised: #171d28;
+  --color-border: #232b38;
+  --color-text: #edeff3;
+  --color-text-muted: #8a94a6;
+  --color-text-faint: #5c6474;
+  --color-primary: #e3a03d;
+  --color-primary-text: #0a0d14;
+  --color-success: #4fc38a;
+  --color-danger: #e2604d;
+  --color-danger-strong: #ff6b6b;
+  --color-warning: #d98c2b;
+  --color-info: #5b9ee8;
+  --color-gold: #e3a03d;
+  --color-flag-blue: #5b9ee8;
+  --shadow-card: 0 8px 20px rgba(0, 0, 0, 0.28);
+  --font-heading: 'Space Grotesk', sans-serif;
+  --font-body: 'Manrope', sans-serif;
+}
+:root[data-app-theme='deepwork'][data-app-mode='light'] {
+  --color-bg: #f5f6f8;
+  --color-surface: #ffffff;
+  --color-surface-raised: #ffffff;
+  --color-border: #e1e4ea;
+  --color-text: #12141a;
+  --color-text-muted: #6b7280;
+  --color-text-faint: #9ca3af;
+  --color-primary: #c9861e;
+  --color-primary-text: #ffffff;
+  --color-success: #2f9563;
+  --color-danger: #c94a32;
+  --color-danger-strong: #e0392a;
+  --color-warning: #b9790f;
+  --color-info: #3b7fc4;
+  --color-gold: #c9861e;
+  --color-flag-blue: #3b7fc4;
+  --shadow-card: 0 8px 20px rgba(16, 20, 28, 0.08);
+  --font-heading: 'Space Grotesk', sans-serif;
+  --font-body: 'Manrope', sans-serif;
+}
+
+/* ── Paper ── */
+:root[data-app-theme='paper'][data-app-mode='light'] {
+  --color-bg: #faf6ef;
+  --color-surface: #ffffff;
+  --color-surface-raised: #ffffff;
+  --color-border: #e8e0d2;
+  --color-text: #2b2620;
+  --color-text-muted: #8a7f6c;
+  --color-text-faint: #b0a48d;
+  --color-primary: #c1622d;
+  --color-primary-text: #ffffff;
+  --color-success: #5b8a5a;
+  --color-danger: #b0453a;
+  --color-danger-strong: #8f2e24;
+  --color-warning: #b08a2e;
+  --color-info: #4a7a8c;
+  --color-gold: #b08a2e;
+  --color-flag-blue: #4a7a8c;
+  --shadow-card: none;
+  --font-heading: 'Newsreader', serif;
+  --font-body: 'Karla', sans-serif;
+}
+:root[data-app-theme='paper'][data-app-mode='dark'] {
+  --color-bg: #1c1712;
+  --color-surface: #241e17;
+  --color-surface-raised: #2c2419;
+  --color-border: #3d3427;
+  --color-text: #f0e9dd;
+  --color-text-muted: #a69a87;
+  --color-text-faint: #7d735f;
+  --color-primary: #e08249;
+  --color-primary-text: #1c1712;
+  --color-success: #7fb07e;
+  --color-danger: #d9705f;
+  --color-danger-strong: #c24b3a;
+  --color-warning: #d1a855;
+  --color-info: #6fa3b5;
+  --color-gold: #d1a855;
+  --color-flag-blue: #6fa3b5;
+  --shadow-card: none;
+  --font-heading: 'Newsreader', serif;
+  --font-body: 'Karla', sans-serif;
+}
+
+/* ── Pulse ── */
+:root[data-app-theme='pulse'][data-app-mode='dark'] {
+  --color-bg: #08090b;
+  --color-surface: #121316;
+  --color-surface-raised: #121316;
+  --color-border: #2a2d33;
+  --color-text: #f2f3f5;
+  --color-text-muted: #9096a1;
+  --color-text-faint: #5c606b;
+  --color-primary: #7c5cfc;
+  --color-primary-text: #08090b;
+  --color-success: #34d399;
+  --color-danger: #fb5a5a;
+  --color-danger-strong: #ff3b3b;
+  --color-warning: #f5a623;
+  --color-info: #4c9eff;
+  --color-gold: #f5a623;
+  --color-flag-blue: #4c9eff;
+  --shadow-card: none;
+  --font-heading: 'Sora', sans-serif;
+  --font-body: 'IBM Plex Sans', sans-serif;
+}
+:root[data-app-theme='pulse'][data-app-mode='light'] {
+  --color-bg: #f7f7f9;
+  --color-surface: #ffffff;
+  --color-surface-raised: #ffffff;
+  --color-border: #e3e4e8;
+  --color-text: #101114;
+  --color-text-muted: #6b6f7a;
+  --color-text-faint: #9ca0aa;
+  --color-primary: #6a46f2;
+  --color-primary-text: #ffffff;
+  --color-success: #16a672;
+  --color-danger: #e0433d;
+  --color-danger-strong: #c22e28;
+  --color-warning: #c97a0a;
+  --color-info: #2f7de0;
+  --color-gold: #c97a0a;
+  --color-flag-blue: #2f7de0;
+  --shadow-card: none;
+  --font-heading: 'Sora', sans-serif;
+  --font-body: 'IBM Plex Sans', sans-serif;
+}
+
+/* ── Sunset ── */
+:root[data-app-theme='sunset'][data-app-mode='light'] {
+  --color-bg: linear-gradient(160deg, #ffd9a0 0%, #ff9a76 45%, #ff6f91 100%);
+  --color-surface: rgba(255, 255, 255, 0.82);
+  --color-surface-raised: rgba(255, 255, 255, 0.82);
+  --color-border: rgba(255, 255, 255, 0.9);
+  --color-text: #4a2a2e;
+  --color-text-muted: #8c6b6e;
+  --color-text-faint: #b79599;
+  --color-primary: #e8503a;
+  --color-primary-text: #ffffff;
+  --color-success: #3fa66b;
+  --color-danger: #d6455b;
+  --color-danger-strong: #b22e42;
+  --color-warning: #c97a1e;
+  --color-info: #d98a3d;
+  --color-gold: #c97a1e;
+  --color-flag-blue: #d98a3d;
+  --shadow-card: 0 10px 28px rgba(180, 80, 60, 0.2);
+  --font-heading: 'DM Sans', sans-serif;
+  --font-body: 'Mulish', sans-serif;
+}
+:root[data-app-theme='sunset'][data-app-mode='dark'] {
+  --color-bg: linear-gradient(160deg, #2b1b3d 0%, #5a2a4d 45%, #8a3b4d 100%);
+  --color-surface: rgba(20, 10, 25, 0.55);
+  --color-surface-raised: rgba(20, 10, 25, 0.55);
+  --color-border: rgba(255, 255, 255, 0.1);
+  --color-text: #fce9e4;
+  --color-text-muted: #c9a7b0;
+  --color-text-faint: #95737c;
+  --color-primary: #ff8a5b;
+  --color-primary-text: #2b1b3d;
+  --color-success: #5fcb8d;
+  --color-danger: #ff6b81;
+  --color-danger-strong: #e0435c;
+  --color-warning: #e8a34a;
+  --color-info: #ffb37a;
+  --color-gold: #e8a34a;
+  --color-flag-blue: #ffb37a;
+  --shadow-card: 0 10px 28px rgba(0, 0, 0, 0.35);
+  --font-heading: 'DM Sans', sans-serif;
+  --font-body: 'Mulish', sans-serif;
+}
+
+/* ── Real Madrid ── */
+:root[data-app-theme='realmadrid'][data-app-mode='light'] {
+  --color-bg: #ffffff;
+  --color-surface: #ffffff;
+  --color-surface-raised: #ffffff;
+  --color-border: #e2e6ed;
+  --color-text: #14213d;
+  --color-text-muted: #6b7690;
+  --color-text-faint: #9ca6bc;
+  --color-primary: #0a3d91;
+  --color-primary-text: #ffffff;
+  --color-success: #2e8b57;
+  --color-danger: #d6433c;
+  --color-danger-strong: #b4291e;
+  --color-warning: #d9a404;
+  --color-info: #0a3d91;
+  --color-gold: #d9a404;
+  --color-flag-blue: #0a3d91;
+  --shadow-card: none;
+  --font-heading: 'Bebas Neue', sans-serif;
+  --font-body: 'Barlow', sans-serif;
+}
+:root[data-app-theme='realmadrid'][data-app-mode='dark'] {
+  --color-bg: #0b1330;
+  --color-surface: #121b3d;
+  --color-surface-raised: #121b3d;
+  --color-border: #26315e;
+  --color-text: #f2f4fa;
+  --color-text-muted: #8892b8;
+  --color-text-faint: #5c6690;
+  --color-primary: #3b6fd1;
+  --color-primary-text: #ffffff;
+  --color-success: #4cd68b;
+  --color-danger: #ff6b6b;
+  --color-danger-strong: #ff4d3d;
+  --color-warning: #f2b705;
+  --color-info: #3b6fd1;
+  --color-gold: #f2b705;
+  --color-flag-blue: #3b6fd1;
+  --shadow-card: none;
+  --font-heading: 'Bebas Neue', sans-serif;
+  --font-body: 'Barlow', sans-serif;
+}
+
+/* ── Cuba ── */
+:root[data-app-theme='cuba'][data-app-mode='light'] {
+  --color-bg: #fff7ec;
+  --color-surface: #ffffff;
+  --color-surface-raised: #ffffff;
+  --color-border: #e3dcc9;
+  --color-text: #1f2a44;
+  --color-text-muted: #8c8471;
+  --color-text-faint: #bfb79e;
+  --color-primary: #e4402e;
+  --color-primary-text: #ffffff;
+  --color-success: #2e9e62;
+  --color-danger: #e4402e;
+  --color-danger-strong: #b82e1f;
+  --color-warning: #d9930a;
+  --color-info: #1fa9a0;
+  --color-gold: #d9930a;
+  --color-flag-blue: #1b4b93;
+  --shadow-card: 0 8px 20px rgba(31, 42, 68, 0.08);
+  --font-heading: 'Pacifico', cursive;
+  --font-body: 'Rubik', sans-serif;
+}
+:root[data-app-theme='cuba'][data-app-mode='dark'] {
+  --color-bg: #0f2a3d;
+  --color-surface: #1e4459;
+  --color-surface-raised: #1e4459;
+  --color-border: #2c566e;
+  --color-text: #f5f0e4;
+  --color-text-muted: #9db3be;
+  --color-text-faint: #6b8590;
+  --color-primary: #ff6b5b;
+  --color-primary-text: #ffffff;
+  --color-success: #4fc98a;
+  --color-danger: #ff6b5b;
+  --color-danger-strong: #d9432e;
+  --color-warning: #e8a83a;
+  --color-info: #3fd6c6;
+  --color-gold: #f5c542;
+  --color-flag-blue: #4a8fe0;
+  --shadow-card: 0 8px 20px rgba(0, 0, 0, 0.3);
+  --font-heading: 'Pacifico', cursive;
+  --font-body: 'Rubik', sans-serif;
+}
+
+/* ── Brazil ── */
+:root[data-app-theme='brazil'][data-app-mode='light'] {
+  --color-bg: #fffdf5;
+  --color-surface: #ffffff;
+  --color-surface-raised: #ffffff;
+  --color-border: #e3efe0;
+  --color-text: #0a2e52;
+  --color-text-muted: #748577;
+  --color-text-faint: #a8b8a6;
+  --color-primary: #ffcc29;
+  --color-primary-text: #0a2e52;
+  --color-success: #00a859;
+  --color-danger: #e2543d;
+  --color-danger-strong: #c23d28;
+  --color-warning: #d9930a;
+  --color-info: #0a2e52;
+  --color-gold: #f2b705;
+  --color-flag-blue: #0a2e52;
+  --shadow-card: none;
+  --font-heading: 'Baloo 2', sans-serif;
+  --font-body: 'Poppins', sans-serif;
+}
+:root[data-app-theme='brazil'][data-app-mode='dark'] {
+  --color-bg: #081c2e;
+  --color-surface: #0f2a3f;
+  --color-surface-raised: #0f2a3f;
+  --color-border: #1f4661;
+  --color-text: #f2f7f2;
+  --color-text-muted: #8fa8a0;
+  --color-text-faint: #5c7a72;
+  --color-primary: #ffcc29;
+  --color-primary-text: #0a2e52;
+  --color-success: #2ecc71;
+  --color-danger: #ff6b5b;
+  --color-danger-strong: #e0392a;
+  --color-warning: #e0a83a;
+  --color-info: #4a90d2;
+  --color-gold: #ffcc29;
+  --color-flag-blue: #4a90d2;
+  --shadow-card: none;
+  --font-heading: 'Baloo 2', sans-serif;
+  --font-body: 'Poppins', sans-serif;
 }
