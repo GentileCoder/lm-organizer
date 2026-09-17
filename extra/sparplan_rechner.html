@@ -1,0 +1,459 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sparplan-Rechner</title>
+<style>
+  .viz-root {
+    color-scheme: light;
+    --surface-1:      #fcfcfb;
+    --page:           #f9f9f7;
+    --text-primary:   #0b0b0b;
+    --text-secondary: #52514e;
+    --text-muted:     #898781;
+    --gridline:       #e1e0d9;
+    --baseline:       #c3c2b7;
+    --border:         rgba(11,11,11,0.10);
+    --series-1:       #2a78d6; /* Endkapital */
+    --series-1-wash:  rgba(42,120,214,0.10);
+    --success:        #006300;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:where(:not([data-theme="light"])) .viz-root {
+      color-scheme: dark;
+      --surface-1:      #1a1a19;
+      --page:           #0d0d0d;
+      --text-primary:   #ffffff;
+      --text-secondary: #c3c2b7;
+      --text-muted:     #898781;
+      --gridline:       #2c2c2a;
+      --baseline:       #383835;
+      --border:         rgba(255,255,255,0.10);
+      --series-1:       #3987e5;
+      --series-1-wash:  rgba(57,135,229,0.14);
+      --success:        #0ca30c;
+    }
+  }
+  :root[data-theme="dark"] .viz-root {
+    color-scheme: dark;
+    --surface-1:      #1a1a19;
+    --page:           #0d0d0d;
+    --text-primary:   #ffffff;
+    --text-secondary: #c3c2b7;
+    --text-muted:     #898781;
+    --gridline:       #2c2c2a;
+    --baseline:       #383835;
+    --border:         rgba(255,255,255,0.10);
+    --series-1:       #3987e5;
+    --series-1-wash:  rgba(57,135,229,0.14);
+    --success:        #0ca30c;
+  }
+
+  * { box-sizing: border-box; }
+  html, body {
+    margin: 0;
+    padding: 0;
+    font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+    background: var(--page);
+    color: var(--text-primary);
+  }
+  .viz-root {
+    max-width: 760px;
+    margin: 0 auto;
+    padding: 28px 20px 40px;
+  }
+  h1 {
+    font-size: 20px;
+    font-weight: 600;
+    margin: 0 0 4px;
+  }
+  .subtitle {
+    color: var(--text-secondary);
+    font-size: 14px;
+    margin: 0 0 24px;
+  }
+  .panel {
+    background: var(--surface-1);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 20px;
+    margin-bottom: 16px;
+  }
+  .controls {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 16px;
+  }
+  @media (max-width: 560px) {
+    .controls { grid-template-columns: 1fr; }
+    .stats { grid-template-columns: 1fr !important; }
+  }
+  label {
+    display: block;
+    font-size: 12px;
+    color: var(--text-secondary);
+    margin-bottom: 6px;
+  }
+  .input-wrap {
+    position: relative;
+  }
+  input[type="number"] {
+    width: 100%;
+    font-size: 16px;
+    font-family: inherit;
+    color: var(--text-primary);
+    background: var(--page);
+    border: 1px solid var(--baseline);
+    border-radius: 8px;
+    padding: 10px 12px;
+    padding-right: 32px;
+    -moz-appearance: textfield;
+  }
+  input[type="number"]::-webkit-outer-spin-button,
+  input[type="number"]::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+  }
+  input[type="number"]:focus {
+    outline: none;
+    border-color: var(--series-1);
+  }
+  .unit {
+    position: absolute;
+    right: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--text-muted);
+    font-size: 13px;
+    pointer-events: none;
+  }
+  .stats {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 16px;
+    margin-bottom: 16px;
+  }
+  .stat-tile {
+    background: var(--surface-1);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 16px 18px;
+  }
+  .stat-label {
+    font-size: 12px;
+    color: var(--text-secondary);
+    margin-bottom: 6px;
+  }
+  .stat-value {
+    font-size: 22px;
+    font-weight: 600;
+    font-variant-numeric: proportional-nums;
+    color: var(--text-primary);
+  }
+  .stat-value.accent { color: var(--series-1); }
+  .stat-value.good { color: var(--success); }
+
+  .chart-title {
+    font-size: 14px;
+    font-weight: 600;
+    margin: 0 0 2px;
+  }
+  .chart-sub {
+    font-size: 12px;
+    color: var(--text-muted);
+    margin: 0 0 14px;
+  }
+  .legend {
+    display: flex;
+    gap: 18px;
+    margin-bottom: 8px;
+    font-size: 12px;
+    color: var(--text-secondary);
+  }
+  .legend-item { display: flex; align-items: center; gap: 6px; }
+  .legend-swatch {
+    width: 14px; height: 2px; border-radius: 2px;
+    display: inline-block;
+  }
+  .legend-swatch.solid { background: var(--series-1); height: 3px; }
+  .legend-swatch.dashed {
+    background: repeating-linear-gradient(90deg, var(--text-muted) 0 5px, transparent 5px 9px);
+    height: 2px;
+  }
+  svg { display: block; width: 100%; height: auto; overflow: visible; }
+  .axis-label { fill: var(--text-muted); font-size: 11px; }
+  .gridline { stroke: var(--gridline); stroke-width: 1; }
+  .baseline { stroke: var(--baseline); stroke-width: 1; }
+  .line-endkapital { fill: none; stroke: var(--series-1); stroke-width: 2; stroke-linejoin: round; stroke-linecap: round; }
+  .area-endkapital { fill: var(--series-1-wash); }
+  .line-eingezahlt { fill: none; stroke: var(--text-muted); stroke-width: 2; stroke-dasharray: 5 4; stroke-linecap: round; }
+  .end-dot { fill: var(--series-1); stroke: var(--surface-1); stroke-width: 2; }
+  .end-dot-muted { fill: var(--text-muted); stroke: var(--surface-1); stroke-width: 2; }
+  .end-label { font-size: 12px; font-weight: 600; fill: var(--text-primary); }
+  .end-label-muted { font-size: 11px; fill: var(--text-secondary); }
+
+  .hover-line { stroke: var(--baseline); stroke-width: 1; }
+  .tooltip {
+    position: absolute;
+    pointer-events: none;
+    background: var(--surface-1);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 8px 10px;
+    font-size: 12px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.12);
+    opacity: 0;
+    transition: opacity 0.1s;
+    white-space: nowrap;
+    color: var(--text-primary);
+  }
+  .tooltip .t-year { color: var(--text-muted); margin-bottom: 4px; }
+  .tooltip .t-row { display: flex; align-items: center; gap: 6px; margin-top: 2px; }
+  .tooltip .t-dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; }
+  .footnote {
+    font-size: 11px;
+    color: var(--text-muted);
+    margin-top: 16px;
+    line-height: 1.5;
+  }
+</style>
+</head>
+<body>
+<div class="viz-root">
+  <h1>Sparplan-Rechner</h1>
+  <p class="subtitle">Monatliche Sparrate mit Zinseszins &mdash; passe Rate, Rendite und Laufzeit an.</p>
+
+  <div class="panel">
+    <div class="controls">
+      <div>
+        <label for="monthly">Monatliche Sparrate</label>
+        <div class="input-wrap">
+          <input type="number" id="monthly" value="100" min="0" step="10">
+          <span class="unit">EUR</span>
+        </div>
+      </div>
+      <div>
+        <label for="rendite">Rendite p.a.</label>
+        <div class="input-wrap">
+          <input type="number" id="rendite" value="5" min="-20" max="30" step="0.1">
+          <span class="unit">%</span>
+        </div>
+      </div>
+      <div>
+        <label for="years">Laufzeit</label>
+        <div class="input-wrap">
+          <input type="number" id="years" value="37" min="1" max="60" step="1">
+          <span class="unit">Jahre</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="stats">
+    <div class="stat-tile">
+      <div class="stat-label">Endkapital</div>
+      <div class="stat-value accent" id="stat-endkapital">&mdash;</div>
+    </div>
+    <div class="stat-tile">
+      <div class="stat-label">Eingezahlt</div>
+      <div class="stat-value" id="stat-eingezahlt">&mdash;</div>
+    </div>
+    <div class="stat-tile">
+      <div class="stat-label">Zinsgewinn</div>
+      <div class="stat-value good" id="stat-gewinn">&mdash;</div>
+    </div>
+  </div>
+
+  <div class="panel" style="position: relative;">
+    <div class="chart-title">Kapitalentwicklung über die Laufzeit</div>
+    <div class="chart-sub" id="chart-sub">&mdash;</div>
+    <div class="legend">
+      <span class="legend-item"><span class="legend-swatch solid"></span>Endkapital</span>
+      <span class="legend-item"><span class="legend-swatch dashed"></span>Eingezahlt (ohne Zinsen)</span>
+    </div>
+    <div id="chart-container"></div>
+    <div class="tooltip" id="tooltip"></div>
+  </div>
+
+  <p class="footnote">
+    Nominale Werte, monatliche Verzinsung (Jahreszins / 12), Zahlung am Monatsende. Ohne Berücksichtigung von Inflation, Steuern oder Depotgebühren. Angenommene Rendite ist eine Annahme, keine Garantie &mdash; keine Anlageberatung.
+  </p>
+</div>
+
+<script>
+(function() {
+  const $monthly = document.getElementById('monthly');
+  const $rendite = document.getElementById('rendite');
+  const $years = document.getElementById('years');
+  const $statEnd = document.getElementById('stat-endkapital');
+  const $statEin = document.getElementById('stat-eingezahlt');
+  const $statGewinn = document.getElementById('stat-gewinn');
+  const $chartSub = document.getElementById('chart-sub');
+  const $container = document.getElementById('chart-container');
+  const $tooltip = document.getElementById('tooltip');
+
+  const fmtEUR = (v) => v.toLocaleString('de-DE', { style: 'currency', currency: 'EUR', maximumFractionDigits: 0 });
+
+  function computeSeries(monthly, annualRate, years) {
+    const i = annualRate / 100 / 12;
+    const totalMonths = years * 12;
+    const points = []; // {year, endkapital, eingezahlt}
+    for (let y = 0; y <= years; y++) {
+      const k = y * 12;
+      let fv;
+      if (Math.abs(i) < 1e-9) {
+        fv = monthly * k;
+      } else {
+        fv = monthly * (((Math.pow(1 + i, k)) - 1) / i);
+      }
+      const eingezahlt = monthly * k;
+      points.push({ year: y, endkapital: fv, eingezahlt: eingezahlt });
+    }
+    return points;
+  }
+
+  function niceMax(v) {
+    if (v <= 0) return 1;
+    const mag = Math.pow(10, Math.floor(Math.log10(v)));
+    const norm = v / mag;
+    let step;
+    if (norm <= 1) step = 1;
+    else if (norm <= 2) step = 2;
+    else if (norm <= 5) step = 5;
+    else step = 10;
+    return step * mag;
+  }
+
+  function render() {
+    const monthly = Math.max(0, parseFloat($monthly.value) || 0);
+    const rendite = parseFloat($rendite.value) || 0;
+    const years = Math.max(1, Math.min(60, parseInt($years.value) || 1));
+
+    const points = computeSeries(monthly, rendite, years);
+    const last = points[points.length - 1];
+    const gewinn = last.endkapital - last.eingezahlt;
+
+    $statEnd.textContent = fmtEUR(last.endkapital);
+    $statEin.textContent = fmtEUR(last.eingezahlt);
+    $statGewinn.textContent = (gewinn >= 0 ? '+' : '') + fmtEUR(gewinn);
+    $chartSub.textContent = `${fmtEUR(monthly)}/Monat · ${rendite.toLocaleString('de-DE')}% p.a. · ${years} Jahre`;
+
+    drawChart(points);
+  }
+
+  function drawChart(points) {
+    const width = 680;
+    const height = 320;
+    const margin = { top: 16, right: 90, bottom: 32, left: 64 };
+    const innerW = width - margin.left - margin.right;
+    const innerH = height - margin.top - margin.bottom;
+
+    const maxVal = niceMax(Math.max(...points.map(p => p.endkapital)));
+    const maxYear = points[points.length - 1].year;
+
+    const x = (year) => margin.left + (year / maxYear) * innerW;
+    const y = (val) => margin.top + innerH - (val / maxVal) * innerH;
+
+    // gridlines (5 steps)
+    const gridSteps = 5;
+    let gridlines = '';
+    let yTicks = '';
+    for (let s = 0; s <= gridSteps; s++) {
+      const val = (maxVal / gridSteps) * s;
+      const yy = y(val);
+      gridlines += `<line class="gridline" x1="${margin.left}" y1="${yy}" x2="${margin.left + innerW}" y2="${yy}"></line>`;
+      yTicks += `<text class="axis-label" x="${margin.left - 10}" y="${yy + 4}" text-anchor="end">${Math.round(val).toLocaleString('de-DE')}</text>`;
+    }
+
+    // x ticks: choose ~6 labels
+    const xTickCount = Math.min(6, maxYear);
+    let xTicks = '';
+    for (let t = 0; t <= xTickCount; t++) {
+      const yr = Math.round((maxYear / xTickCount) * t);
+      xTicks += `<text class="axis-label" x="${x(yr)}" y="${margin.top + innerH + 20}" text-anchor="middle">${yr}J</text>`;
+    }
+
+    const lineEnd = points.map(p => `${x(p.year)},${y(p.endkapital)}`).join(' ');
+    const lineEin = points.map(p => `${x(p.year)},${y(p.eingezahlt)}`).join(' ');
+    const areaPath = `M${x(0)},${y(0)} ` + points.map(p => `L${x(p.year)},${y(p.endkapital)}`).join(' ') + ` L${x(maxYear)},${y(0)} Z`;
+
+    const lastP = points[points.length - 1];
+    const endLabel = fmtEUR(Math.round(lastP.endkapital));
+    const einLabel = fmtEUR(Math.round(lastP.eingezahlt));
+
+    // hover targets (invisible rects per segment, snap to nearest point)
+    let hoverCircles = '';
+    points.forEach((p, idx) => {
+      hoverCircles += `<circle class="hover-target" data-idx="${idx}" cx="${x(p.year)}" cy="${y(p.endkapital)}" r="10" fill="transparent"></circle>`;
+    });
+
+    const svg = `
+      <svg viewBox="0 0 ${width} ${height}" preserveAspectRatio="xMidYMid meet">
+        ${gridlines}
+        <line class="baseline" x1="${margin.left}" y1="${margin.top + innerH}" x2="${margin.left + innerW}" y2="${margin.top + innerH}"></line>
+        ${yTicks}
+        ${xTicks}
+        <path class="area-endkapital" d="${areaPath}"></path>
+        <polyline class="line-eingezahlt" points="${lineEin}"></polyline>
+        <polyline class="line-endkapital" points="${lineEnd}"></polyline>
+        <circle class="end-dot" cx="${x(lastP.year)}" cy="${y(lastP.endkapital)}" r="4"></circle>
+        <circle class="end-dot-muted" cx="${x(lastP.year)}" cy="${y(lastP.eingezahlt)}" r="4"></circle>
+        <text class="end-label" x="${x(lastP.year) + 10}" y="${y(lastP.endkapital) + 4}">${endLabel}</text>
+        <text class="end-label-muted" x="${x(lastP.year) + 10}" y="${y(lastP.eingezahlt) + 4}">${einLabel}</text>
+        <line class="hover-line" id="hoverLine" x1="0" y1="${margin.top}" x2="0" y2="${margin.top + innerH}" style="opacity:0"></line>
+        ${hoverCircles}
+      </svg>
+    `;
+    $container.innerHTML = svg;
+
+    const svgEl = $container.querySelector('svg');
+    const hoverLine = document.getElementById('hoverLine');
+    const targets = $container.querySelectorAll('.hover-target');
+
+    targets.forEach((t) => {
+      t.addEventListener('mouseenter', (e) => showTooltip(e, points, parseInt(t.dataset.idx), x, y, margin, innerH));
+      t.addEventListener('mousemove', (e) => showTooltip(e, points, parseInt(t.dataset.idx), x, y, margin, innerH));
+      t.addEventListener('mouseleave', hideTooltip);
+    });
+
+    function showTooltip(evt, points, idx, x, y, margin, innerH) {
+      const p = points[idx];
+      hoverLine.setAttribute('x1', x(p.year));
+      hoverLine.setAttribute('x2', x(p.year));
+      hoverLine.style.opacity = 1;
+
+      const gewinn = p.endkapital - p.eingezahlt;
+      $tooltip.innerHTML = `
+        <div class="t-year">Jahr ${p.year}</div>
+        <div class="t-row"><span class="t-dot" style="background:var(--series-1)"></span>Endkapital: <strong>${fmtEUR(Math.round(p.endkapital))}</strong></div>
+        <div class="t-row"><span class="t-dot" style="background:var(--text-muted)"></span>Eingezahlt: <strong>${fmtEUR(Math.round(p.eingezahlt))}</strong></div>
+        <div class="t-row" style="color:var(--success)">Zinsgewinn: <strong>${fmtEUR(Math.round(gewinn))}</strong></div>
+      `;
+
+      const containerRect = $container.closest('.panel').getBoundingClientRect();
+      const svgRect = svgEl.getBoundingClientRect();
+      const scale = svgRect.width / width;
+      const px = svgRect.left - containerRect.left + x(p.year) * scale;
+      const py = svgRect.top - containerRect.top + y(p.endkapital) * scale;
+
+      $tooltip.style.opacity = 1;
+      let left = px + 14;
+      const tw = 190;
+      if (left + tw > containerRect.width) left = px - tw - 14;
+      $tooltip.style.left = left + 'px';
+      $tooltip.style.top = Math.max(0, py - 60) + 'px';
+    }
+
+    function hideTooltip() {
+      $tooltip.style.opacity = 0;
+      hoverLine.style.opacity = 0;
+    }
+  }
+
+  [$monthly, $rendite, $years].forEach(el => el.addEventListener('input', render));
+  render();
+})();
+</script>
+</body>
+</html>

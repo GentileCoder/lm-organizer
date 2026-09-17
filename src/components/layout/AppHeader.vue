@@ -88,6 +88,10 @@ const stripeBands = computed(() => {
   position: sticky;
   top: 0;
   z-index: 10;
+  width: 100%;
+  max-width: var(--content-max-width);
+  margin: 0 auto;
+  box-sizing: border-box;
 }
 .title-row {
   display: flex;
@@ -123,6 +127,10 @@ const stripeBands = computed(() => {
   padding: 4px 16px;
   background: var(--color-surface);
   border-bottom: 1px solid var(--color-border);
+  width: 100%;
+  max-width: var(--content-max-width);
+  margin: 0 auto;
+  box-sizing: border-box;
 }
 .fan-label {
   font-size: 9px;
@@ -134,6 +142,9 @@ const stripeBands = computed(() => {
 .stripe {
   display: flex;
   height: 3px;
+  width: 100%;
+  max-width: var(--content-max-width);
+  margin: 0 auto;
 }
 .stripe-band {
   flex: 1;

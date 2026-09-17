@@ -5,6 +5,29 @@
   -webkit-tap-highlight-color: transparent;
 }
 
+/* Single source of truth for how wide the app's content column gets — the header, nav,
+   and main content all read this so they stay in sync instead of drifting independently.
+   The mobile value (480px) is unchanged from the original phone-first design; it only
+   grows on wider viewports so a desktop browser isn't stuck with the same narrow column. */
+:root {
+  --content-max-width: 480px;
+}
+@media (min-width: 640px) {
+  :root {
+    --content-max-width: 560px;
+  }
+}
+@media (min-width: 900px) {
+  :root {
+    --content-max-width: 640px;
+  }
+}
+@media (min-width: 1200px) {
+  :root {
+    --content-max-width: 680px;
+  }
+}
+
 html,
 body,
 #app {

@@ -26,6 +26,10 @@ const links = [
   background: var(--color-surface);
   border-bottom: 1px solid var(--color-border);
   overflow-x: auto;
+  width: 100%;
+  max-width: var(--content-max-width);
+  margin: 0 auto;
+  box-sizing: border-box;
 }
 .app-nav::-webkit-scrollbar {
   display: none;

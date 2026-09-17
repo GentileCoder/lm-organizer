@@ -34,7 +34,7 @@ watch(
   flex: 1;
   padding: 16px;
   overflow-y: auto;
-  max-width: 480px;
+  max-width: var(--content-max-width);
   width: 100%;
   margin: 0 auto;
 }
