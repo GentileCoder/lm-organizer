@@ -16,6 +16,7 @@ const paybackStr = computed(() => {
 // Analyses saved before scoreTier existed only have a numeric score — fall back to
 // deriving the tier from that so old saved analyses still get the right color.
 const roiClass = computed(() => tierClass(props.inv.scoreTier || tierFromScore(props.inv.score)))
+const lastYear = computed(() => props.inv.years[props.inv.years.length - 1])
 </script>
 
 <template>
@@ -44,7 +45,7 @@ const roiClass = computed(() => tierClass(props.inv.scoreTier || tierFromScore(p
         >Payback <span class="value">{{ paybackStr }}</span></span
       >
       <span
-        >3yr <span class="value">{{ fmtCurrency(inv.years[2].cumulative) }}</span></span
+        >{{ inv.years.length }}yr <span class="value">{{ fmtCurrency(lastYear.cumulative) }}</span></span
       >
     </div>
   </div>

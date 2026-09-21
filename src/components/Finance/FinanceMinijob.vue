@@ -2,7 +2,7 @@
 import { computed, ref } from 'vue'
 import { useOrganizerStore } from '../../stores/organizer.js'
 import { fmtCurrency, todayStr } from '../../utils/format.js'
-import { MONTHS_S } from '../../utils/constants.js'
+import { MONTHS_L, MONTHS_S } from '../../utils/constants.js'
 
 const organizerStore = useOrganizerStore()
 const now = new Date()
@@ -57,7 +57,34 @@ const activeMonths = computed(() => months.value.filter(x => x.total > 0))
 const avgMonth = computed(() =>
   activeMonths.value.length ? activeMonths.value.reduce((s, x) => s + x.total, 0) / activeMonths.value.length : 0
 )
+const highestMonth = computed(() => months.value.reduce((max, x) => (x.total > max.total ? x : max), months.value[0]))
+const monthEntryCount = computed(() => {
+  const ms = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`
+  return minijob.value.filter(b => b.date.startsWith(ms)).length
+})
+const allTimeTotal = computed(() => minijob.value.reduce((s, b) => s + b.amount, 0))
+const avgPerEntry = computed(() => (minijob.value.length ? allTimeTotal.value / minijob.value.length : 0))
+
 const rows = computed(() => [...minijob.value].sort((a, b) => b.date.localeCompare(a.date)))
+
+const logM = ref(now.getMonth())
+const logY = ref(now.getFullYear())
+function navLog(dir) {
+  logM.value += dir
+  if (logM.value > 11) {
+    logM.value = 0
+    logY.value++
+  }
+  if (logM.value < 0) {
+    logM.value = 11
+    logY.value--
+  }
+}
+const logEntries = computed(() => {
+  const ms = `${logY.value}-${String(logM.value + 1).padStart(2, '0')}`
+  return rows.value.filter(b => b.date.startsWith(ms))
+})
+const logTotal = computed(() => logEntries.value.reduce((s, b) => s + b.amount, 0))
 
 function add() {
   const amt = parseFloat(amount.value)
@@ -82,10 +109,24 @@ function add() {
       <div class="sv" style="color: var(--color-success)">{{ fmtCurrency(yearTotal) }}</div>
     </div>
   </div>
-  <div class="sg2" style="margin-bottom: 14px">
+  <div class="sg3" style="margin-bottom: 14px">
     <div class="sc">
       <div class="sl">Avg / active month</div>
       <div class="sv" style="color: var(--color-success)">{{ fmtCurrency(avgMonth) }}</div>
+    </div>
+    <div class="sc">
+      <div class="sl">Highest month</div>
+      <div class="sv" style="color: var(--color-success)">{{ fmtCurrency(highestMonth?.total || 0) }}</div>
+    </div>
+    <div class="sc">
+      <div class="sl">Avg / entry</div>
+      <div class="sv" style="color: var(--color-success)">{{ fmtCurrency(avgPerEntry) }}</div>
+    </div>
+  </div>
+  <div class="sg2" style="margin-bottom: 14px">
+    <div class="sc">
+      <div class="sl">Entries this month</div>
+      <div class="sv">{{ monthEntryCount }}</div>
     </div>
     <div class="sc">
       <div class="sl">Total entries</div>
@@ -123,9 +164,22 @@ function add() {
   </div>
 
   <div class="card">
-    <div style="font-size: 13px; font-weight: 500; margin-bottom: 4px">Log</div>
-    <p v-if="!rows.length" style="font-size: 13px; color: var(--color-text-muted); padding: 8px 0">No entries yet.</p>
-    <div v-for="b in rows" :key="b.id" class="log-row">
+    <div class="log-header">
+      <span style="font-size: 13px; font-weight: 500">Log</span>
+      <div class="log-nav">
+        <button class="cal-nav-btn" @click="navLog(-1)">‹</button>
+        <span class="log-month-label">{{ MONTHS_L[logM] }} {{ logY }}</span>
+        <button class="cal-nav-btn" @click="navLog(1)">›</button>
+      </div>
+    </div>
+    <div v-if="logEntries.length" class="log-group-total-row">
+      <span>Total</span>
+      <span class="log-group-total">{{ fmtCurrency(logTotal) }}</span>
+    </div>
+    <p v-if="!logEntries.length" style="font-size: 13px; color: var(--color-text-muted); padding: 8px 0">
+      No entries this month.
+    </p>
+    <div v-for="b in logEntries" :key="b.id" class="log-row">
       <span class="log-date">{{ b.date }}</span>
       <span class="log-desc">{{ b.description }}</span>
       <span class="log-amount">+{{ fmtCurrency(b.amount) }}</span>
@@ -159,6 +213,38 @@ function add() {
 }
 .bar-label {
   font-size: 9px;
+}
+.log-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 4px;
+  gap: 8px;
+}
+.log-nav {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.log-month-label {
+  font-size: 12px;
+  color: var(--color-text-muted);
+  white-space: nowrap;
+}
+.log-group-total-row {
+  display: flex;
+  justify-content: space-between;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--color-text-muted);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  padding: 6px 0 4px;
+  border-bottom: 1px solid var(--color-border);
+  margin-bottom: 2px;
+}
+.log-group-total {
+  color: var(--color-success);
 }
 .log-row {
   display: flex;

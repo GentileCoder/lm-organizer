@@ -8,11 +8,27 @@ const organizerStore = useOrganizerStore()
 const categories = computed(() => organizerStore.data.finance.expenseCategories)
 const expenses = computed(() => organizerStore.data.finance.expenses)
 
-const monthlyFixed = computed(() =>
-  expenses.value
-    .filter(e => e.recurring !== 'one-time')
-    .reduce((s, e) => s + e.amount / ({ monthly: 1, quarterly: 3, biannual: 6, yearly: 12 }[e.recurring] || 1), 0)
-)
+const RECUR_MONTHS = { monthly: 1, quarterly: 3, biannual: 6, yearly: 12 }
+function monthlyAmount(e) {
+  return e.recurring === 'one-time' ? 0 : e.amount / (RECUR_MONTHS[e.recurring] || 1)
+}
+const monthlyFixed = computed(() => expenses.value.reduce((s, e) => s + monthlyAmount(e), 0))
+
+const groupByCategory = ref(false)
+const categoryBreakdown = computed(() => {
+  const groups = new Map()
+  for (const c of categories.value) groups.set(c, { category: c, monthly: 0, oneTime: 0, count: 0, entries: [] })
+  for (const e of expenses.value) {
+    if (!groups.has(e.category))
+      groups.set(e.category, { category: e.category, monthly: 0, oneTime: 0, count: 0, entries: [] })
+    const g = groups.get(e.category)
+    g.monthly += monthlyAmount(e)
+    if (e.recurring === 'one-time') g.oneTime += e.amount
+    g.count++
+    g.entries.push(e)
+  }
+  return Array.from(groups.values()).sort((a, b) => b.monthly + b.oneTime - (a.monthly + a.oneTime))
+})
 
 const newCategoryName = ref('')
 function addCategory() {
@@ -116,11 +132,38 @@ function addExpense() {
   </div>
 
   <div class="card">
-    <div style="font-size: 13px; font-weight: 500; margin-bottom: 4px">All expenses</div>
+    <div class="list-header">
+      <span style="font-size: 13px; font-weight: 500">All expenses</span>
+      <div class="seg">
+        <button class="seg-btn" :class="{ active: !groupByCategory }" @click="groupByCategory = false">List</button>
+        <button class="seg-btn" :class="{ active: groupByCategory }" @click="groupByCategory = true">
+          By category
+        </button>
+      </div>
+    </div>
     <p v-if="!expenses.length" style="font-size: 13px; color: var(--color-text-muted); padding: 8px 0">
       No expenses defined yet.
     </p>
-    <ExpenseRow v-for="e in expenses" :key="e.id" :expense="e" :categories="categories" />
+
+    <template v-else-if="!groupByCategory">
+      <ExpenseRow v-for="e in expenses" :key="e.id" :expense="e" :categories="categories" />
+    </template>
+
+    <template v-else>
+      <div v-for="g in categoryBreakdown" :key="g.category" class="cat-group">
+        <div class="cat-group-header">
+          <span
+            >{{ g.category }} <span class="cat-group-count">({{ g.count }})</span></span
+          >
+          <span class="cat-group-total">
+            {{ fmtCurrency(g.monthly) }}/mo<template v-if="g.oneTime">
+              + {{ fmtCurrency(g.oneTime) }} one-time</template
+            >
+          </span>
+        </div>
+        <ExpenseRow v-for="e in g.entries" :key="e.id" :expense="e" :categories="categories" />
+      </div>
+    </template>
   </div>
 </template>
 
@@ -155,5 +198,50 @@ function addExpense() {
   font-size: 11px;
   color: var(--color-text-muted);
   margin-bottom: 4px;
+}
+.list-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+  gap: 8px;
+}
+.seg {
+  display: flex;
+  gap: 4px;
+  flex-shrink: 0;
+}
+.seg-btn {
+  background: var(--color-surface);
+  color: var(--color-text-muted);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-full);
+  padding: 4px 10px;
+  font-size: 11px;
+}
+.seg-btn.active {
+  background: var(--color-primary);
+  color: var(--color-primary-text, #fff);
+  border-color: var(--color-primary);
+}
+.cat-group {
+  margin-bottom: 6px;
+}
+.cat-group-header {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  font-size: 12px;
+  font-weight: 600;
+  padding: 10px 0 4px;
+}
+.cat-group-count {
+  color: var(--color-text-faint);
+  font-weight: 400;
+}
+.cat-group-total {
+  color: var(--color-danger);
+  font-weight: 500;
+  white-space: nowrap;
 }
 </style>

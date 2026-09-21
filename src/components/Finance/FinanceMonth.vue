@@ -1,7 +1,7 @@
 <script setup>
 import { computed, ref } from 'vue'
 import { useOrganizerStore } from '../../stores/organizer.js'
-import { monthSummary, toMonthly } from '../../utils/financeCalc.js'
+import { minijobForMonth, monthSummary, toMonthly } from '../../utils/financeCalc.js'
 import { fmtCurrency } from '../../utils/format.js'
 import { MONTHS_L, EXPENSE_RECURRENCE_LABELS } from '../../utils/constants.js'
 
@@ -17,6 +17,7 @@ const categoryTotals = computed(() => {
   return Object.entries(totals).sort((a, b) => b[1] - a[1])
 })
 const incomeSources = computed(() => organizerStore.data.finance.incomeSources || [])
+const minijobAmount = computed(() => minijobForMonth(organizerStore.data.finance, finY.value, finM.value))
 
 function nav(dir) {
   finM.value += dir
@@ -58,12 +59,18 @@ function nav(dir) {
     </div>
   </div>
 
-  <div v-if="incomeSources.length" class="card" style="margin-bottom: 14px">
+  <div v-if="incomeSources.length || minijobAmount > 0" class="card" style="margin-bottom: 14px">
     <div style="font-size: 13px; font-weight: 500; margin-bottom: 6px">Income sources</div>
     <div v-for="src in incomeSources" :key="src.id" class="income-row">
       <span style="flex: 1; font-size: 13px">{{ src.name }}</span>
       <span style="font-size: 13px; font-weight: 500; color: var(--color-success)"
         >+{{ fmtCurrency(toMonthly(src.amount, src.frequency)) }}</span
+      >
+    </div>
+    <div v-if="minijobAmount > 0" class="income-row">
+      <span style="flex: 1; font-size: 13px">Minijob</span>
+      <span style="font-size: 13px; font-weight: 500; color: var(--color-success)"
+        >+{{ fmtCurrency(minijobAmount) }}</span
       >
     </div>
   </div>

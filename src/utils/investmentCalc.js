@@ -1,5 +1,5 @@
-/** Pure port of legacy `calcInvestment()` — ROI, payback period, and a 3-year projection. */
-export function calcInvestment({ name, initial, monthlyRev, monthlyCost, growth }) {
+/** Pure port of legacy `calcInvestment()` — ROI, payback period, and a multi-year projection. */
+export function calcInvestment({ name, initial, monthlyRev, monthlyCost, growth, projectionYears = 3 }) {
   const monthlyProfit = monthlyRev - monthlyCost
   const annualProfit = monthlyProfit * 12
   const annualROI = initial > 0 ? (annualProfit / initial) * 100 : 0
@@ -8,7 +8,7 @@ export function calcInvestment({ name, initial, monthlyRev, monthlyCost, growth 
   const years = []
   let cumulative = 0
   let yearProfit = annualProfit
-  for (let y = 1; y <= 3; y++) {
+  for (let y = 1; y <= projectionYears; y++) {
     cumulative += yearProfit
     years.push({ year: y, profit: yearProfit, cumulative })
     yearProfit *= 1 + growth / 100
@@ -51,6 +51,7 @@ export function calcInvestment({ name, initial, monthlyRev, monthlyCost, growth 
     annualProfit,
     annualROI,
     paybackMonths,
+    projectionYears,
     years,
     score,
     scoreLabel,

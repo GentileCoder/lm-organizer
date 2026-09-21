@@ -2,10 +2,12 @@
 import { ref } from 'vue'
 import LumpSumAnalyzer from '../components/Investment/LumpSumAnalyzer.vue'
 import SparplanCalculator from '../components/Investment/SparplanCalculator.vue'
+import BaufinanzierungRechner from '../components/Investment/BaufinanzierungRechner.vue'
 
 const tabs = [
   { key: 'lump-sum', label: 'Lump Sum' },
   { key: 'sparplan', label: 'Sparplan' },
+  { key: 'baufinanzierung', label: 'Baufinanzierung' },
 ]
 const activeTab = ref('lump-sum')
 </script>
@@ -24,5 +26,6 @@ const activeTab = ref('lump-sum')
   </div>
 
   <LumpSumAnalyzer v-if="activeTab === 'lump-sum'" />
-  <SparplanCalculator v-else />
+  <SparplanCalculator v-else-if="activeTab === 'sparplan'" />
+  <BaufinanzierungRechner v-else />
 </template>

@@ -39,6 +39,7 @@ function yearPct(y) {
   const r = props.result
   return r.initial > 0 ? Math.min(100, Math.max(0, (y.cumulative / r.initial) * 100)) : y.cumulative > 0 ? 100 : 0
 }
+const lastYear = computed(() => props.result.years[props.result.years.length - 1])
 </script>
 
 <template>
@@ -98,7 +99,7 @@ function yearPct(y) {
 
   <div class="card">
     <div class="inv-label" style="margin-bottom: 12px">
-      3-Year Projection<template v-if="result.growth !== 0">
+      {{ result.years.length }}-Year Projection<template v-if="result.growth !== 0">
         ({{ result.growth > 0 ? '+' : '' }}{{ result.growth }}% growth/yr)</template
       >
     </div>
@@ -124,16 +125,16 @@ function yearPct(y) {
     </div>
 
     <div class="totals-block">
-      <div class="totals-label">Cumulative profit after 3 years</div>
+      <div class="totals-label">Cumulative profit after {{ result.years.length }} years</div>
       <div
         class="totals-value"
-        :style="{ color: result.years[2].cumulative >= 0 ? 'var(--color-success)' : 'var(--color-danger-strong)' }"
+        :style="{ color: lastYear.cumulative >= 0 ? 'var(--color-success)' : 'var(--color-danger-strong)' }"
       >
-        {{ fmtCurrency(result.years[2].cumulative) }}
+        {{ fmtCurrency(lastYear.cumulative) }}
       </div>
       <div v-if="result.initial > 0" class="roi-note">
-        Total ROI over 3 years:
-        <span class="roi-value">{{ ((result.years[2].cumulative / result.initial) * 100).toFixed(1) }}%</span>
+        Total ROI over {{ result.years.length }} years:
+        <span class="roi-value">{{ ((lastYear.cumulative / result.initial) * 100).toFixed(1) }}%</span>
       </div>
     </div>
 

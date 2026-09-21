@@ -105,10 +105,4 @@ const interestEarned = computed(() => lastPoint.value.endCapital - lastPoint.val
   background: repeating-linear-gradient(90deg, var(--color-text-muted) 0 5px, transparent 5px 9px);
   height: 2px;
 }
-.footnote {
-  font-size: 11px;
-  color: var(--color-text-muted);
-  margin-top: 16px;
-  line-height: 1.5;
-}
 </style>

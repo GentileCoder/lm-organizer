@@ -8,7 +8,7 @@ import SavedInvestmentCard from './SavedInvestmentCard.vue'
 
 const organizerStore = useOrganizerStore()
 
-const form = reactive({ name: '', initial: '', monthlyRev: '', monthlyCost: '', growth: '' })
+const form = reactive({ name: '', initial: '', monthlyRev: '', monthlyCost: '', growth: '', projectionYears: '3' })
 const result = ref(null)
 
 function calculate() {
@@ -18,6 +18,7 @@ function calculate() {
     monthlyRev: parseFloat(form.monthlyRev) || 0,
     monthlyCost: parseFloat(form.monthlyCost) || 0,
     growth: parseFloat(form.growth) || 0,
+    projectionYears: Math.max(1, Math.min(40, parseInt(form.projectionYears) || 3)),
   })
 }
 
@@ -30,6 +31,7 @@ function saveAnalysis() {
   form.monthlyRev = ''
   form.monthlyCost = ''
   form.growth = ''
+  form.projectionYears = '3'
 }
 </script>
 
@@ -54,16 +56,16 @@ function saveAnalysis() {
       </div>
     </div>
 
-    <div class="inv-label">Expected Annual Growth Rate (%)</div>
-    <input
-      v-model="form.growth"
-      type="number"
-      min="-100"
-      max="1000"
-      step="0.5"
-      placeholder="10"
-      style="margin-bottom: 14px"
-    />
+    <div class="sg2" style="margin-bottom: 14px">
+      <div>
+        <div class="inv-label">Expected Annual Growth Rate (%)</div>
+        <input v-model="form.growth" type="number" min="-100" max="1000" step="0.5" placeholder="10" />
+      </div>
+      <div>
+        <div class="inv-label">Projection Years</div>
+        <input v-model="form.projectionYears" type="number" min="1" max="40" step="1" placeholder="3" />
+      </div>
+    </div>
 
     <button class="pbtn" style="width: 100%" @click="calculate">Calculate</button>
   </div>
